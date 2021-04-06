@@ -2259,17 +2259,16 @@ if width >= 1920:
     gspec[0, :4] = pn.Row(html_paneh, sizing_mode='scale_both', margin=5, max_height=150)
     gspec[1, :4] = pn.Row(html_pane, html_pane8, html_pane2, html_pane5, html_pane9, html_pane10, html_pane11,
                           sizing_mode='scale_both', margin=5)
-    gspec[2, 0:2] = pn.Row(pn.Column(PBC, billing_cat_multiindex_rev), sizing_mode='scale_both', margin=5, max_width=1200,
+    gspec[2, 0:2] = pn.Row(pn.Column(PBC, billing_cat_multiindex_rev), sizing_mode='scale_both', margin=5,
                            css_classes=['panel-df2'])  # bcat_header
-    gspec[2, 2:4] = pn.Row(function_for_plot, sizing_mode='scale_both', margin=5)
-    gspec[3, 0:2] = pn.Row(top5providers, sizing_mode='scale_both', margin=5, css_classes=['panel-df'])
-    gspec[3, 2:4] = pn.Row(bot5providers, sizing_mode='scale_both', margin=5, css_classes=['panel-df'])
-    gspec[4, :4] = pn.Row(pn.Column(p3), sizing_mode='scale_both', margin=5)
-    gspec[5, :4] = pn.Row(function_for_plot_balance, function_for_plot_er, sizing_mode='scale_both',
-                          margin=(15, 5, 5, 5))  # pn.Spacer(background='orange',height=50)
-    gspec[6, 0:2] = pn.Row(top10institutions, sizing_mode='scale_both', margin=5, css_classes=['panel-df'])
-    gspec[6, 2:4] = pn.Row(top10providers, sizing_mode='scale_both', margin=5, css_classes=['panel-df'])
-    gspec[7, :4] = pn.Row(html_panef, sizing_mode='scale_both', max_height=100, margin=(115, 5, 5, 5))
+    gspec[2, 2:4] = pn.Row(function_for_plot, sizing_mode='scale_both', margin=(90, 5, 5, 5))
+    gspec[3, 0:2] = pn.Row(top5providers, sizing_mode='scale_both', margin=(60, 5, 5, 5), css_classes=['panel-df'])
+    gspec[3, 2:4] = pn.Row(bot5providers, sizing_mode='scale_both', margin=(50, 5, 5, 5), css_classes=['panel-df'])
+    gspec[4, :4] = pn.Row(pn.Column(p3), sizing_mode='scale_both', margin=(50, 5, 5, 5))
+    gspec[5, :4] = pn.Row(function_for_plot_balance, function_for_plot_er, sizing_mode='scale_both', margin=(50, 5, 5, 5))  # pn.Spacer(background='orange',height=50)
+    gspec[6, 0:2] = pn.Row(top10institutions, sizing_mode='scale_both', margin=(50, 5, 5, 5), css_classes=['panel-df'])
+    gspec[6, 2:4] = pn.Row(top10providers, sizing_mode='scale_both', margin=(50, 5, 5, 5), css_classes=['panel-df'])
+    gspec[7, :4] = pn.Row(html_panef, sizing_mode='scale_both', max_height=100, margin=(150, 5, 5, 5))
 else:
     gspec = pn.GridSpec(sizing_mode='stretch_both')
     gspec[0,:4] = pn.Row(html_paneh, margin=5, max_height=150)
@@ -2324,6 +2323,9 @@ rev_dashboard = pn.Tabs(
 
 
 gspec.save('rev_dashboard.html', resources=INLINE, embed=True)                         ## how to save as an html file
+# from bokeh.io import export_png
+#
+# export_png(top10providers, filename="plot.png")
 
 me = "anussbaum@statestreet.com"   #testing set
 to = "anussbaum@statestreet.com"
@@ -2331,6 +2333,5 @@ bcc = "Blake, anussbaum@statestreet.com"
 body = ("Attached is the Fund Connect Performance Dashboard as of " + latest_dt.strftime("%m-%d-%y") + ":" + "\n"
        "$" +filtered_total_bal_usde_str + "B is the current balance and this is a change of " + filtered_total_bal_chg_str +"%" + " and $" + filtered_total_bal_chg_usd_str +"B." + "\n" + "\n"
         "All values are expressed in USD. (Please open with Chrome for optimal performance.)")
-
 
 
