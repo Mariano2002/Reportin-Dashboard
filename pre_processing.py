@@ -274,7 +274,15 @@ df_merged = df_merged.loc[df_merged['RATE_TYPE'] != 'Non Billable']
 # exit()
 
 # b. Manual Date exclusions for Holidays
-df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-01-15']
+df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-12-25']
+df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-11-25']
+df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-11-11']
+df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-10-11']
+df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-09-06']
+df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-07-05']
+df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-05-31']
+df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-04-02']
+df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-02-15']
 df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-01-18']
 df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-01-01']
 df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2020-12-25']
