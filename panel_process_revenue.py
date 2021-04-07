@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import argon
 import datetime
 import calendar
@@ -27,6 +28,34 @@ from email import encoders
 import smtplib
 import argparse
 from win32api import GetSystemMetrics
+from bokeh.io import export_svgs
+import imgkit
+import asyncio
+from pyppeteer import launch
+import os
+
+async def generate_pdf(sourcepath, output):
+    browser = await launch(
+        handleSIGINT=False,
+        handleSIGTERM=False,
+        handleSIGHUP=False
+    )
+    page = await browser.newPage()
+    await page.goto(sourcepath, {'waitUntil': 'networkidle2'})
+    await page.pdf({
+      'path': output,
+      'scale': 2.0,
+      'format': 'A4',
+      'printBackground': True,
+      'landscape': True,
+      'margin': {
+        'top': 0,
+        'bottom': 0,
+        'left': 0,
+        'right': 0
+      }
+    })
+    await browser.close()
 
 # Step 1
 # Import Pickled Files
@@ -96,6 +125,7 @@ latest_dt_m1_str = latest_dt_m1.strftime("%Y-%m-%d")
 prior_bday = datetime.today() - pd.tseries.offsets.BDay(1)
 prior_bday_string = prior_bday.strftime("%Y-%m-%d")
 waiverRate =  0.25
+
 
 # Step 3
 # Concatenate all portal and sweep dataframes
@@ -299,6 +329,8 @@ def table1():
      {'selector': 'tr:hover',
       'props': [('background', 'lightblue !important'),
                 ('cursor', 'pointer')]}])
+
+
     return billing_cat_multiindex_rev
 
 billing_cat_multiindex_rev = table1()
@@ -377,6 +409,8 @@ def table2():
      {'selector': 'tr:hover',
       'props': [('background', 'lightblue !important'),
                 ('cursor', 'pointer')]}])
+
+
     return top10institutions
 
 top10institutions = table2()
@@ -442,6 +476,7 @@ def table3():
      {'selector': 'tr:hover',
       'props': [('background', 'lightblue !important'),
                 ('cursor', 'pointer')]}])
+
     return top10providers
 
 top10providers = table3()
@@ -837,6 +872,7 @@ bot5providers = bot5providers.style.applymap(color_negative_red, subset=['Balanc
   'props': [('background', 'lightblue !important'),
             ('cursor', 'pointer')]}])
 
+
 ct_for_stkbar_bal = pd.crosstab(index=df_for_stkbar['BALANCE_DT'], columns=df_for_stkbar['FUND_CATEGORY'], values=df_for_stkbar['BALANCE_USDE'], aggfunc=np.sum)
 
 stkbar_src = ColumnDataSource(data=ct_for_stkbar_bal)
@@ -1023,6 +1059,7 @@ def function_for_plot(ctcp):
 
     p.add_tools(hover)
 
+
     return p
 
 cat_choice_plot = pn.widgets.CheckButtonGroup(name='Category Analytics', options= list(stkbar_cats), margin=(0, 20, 0, 0), button_type='primary')
@@ -1194,7 +1231,6 @@ def function_for_plot_er(ctcp):
 
 
     p.add_tools(hover)
-
 
     return p
 
@@ -2071,7 +2107,6 @@ html_pane = pn.pane.HTML("""
 <code>
 
 <h1>${filtered_total_bal_usde:,.2f}B | {filtered_total_bal_chg:.2f}%</h1>
-
 """.format(filtered_total_bal_usde = filtered_total_bal_usde, filtered_total_bal_chg = filtered_total_bal_chg), style={'background-color': 'e1e7e3', 'border': border_col_change(filtered_total_bal_chg) ,
             'border-radius': '5px',  'font-size': '12px', 'text-align':'center', 'width':'300px', 'color': color_choice(filtered_total_bal_chg)}, width_policy='max')
 
@@ -2252,7 +2287,7 @@ ins_col = pn.Column(prov_ins_choice,client_ins_callback)
 
 # t5_col = pn.Column(top5text, clients_t5m, ins_t5m)
 # b5_col = pn.Column(b5text,clients_b5m, ins_b5m)
-
+print(latest_dt_str)
 width = GetSystemMetrics(0)
 if width >= 1920:
     gspec = pn.GridSpec(sizing_mode='stretch_both')
@@ -2285,7 +2320,20 @@ else:
     gspec[11, :4] = pn.Row(top10providers, margin=(100, 20, 20, 20), css_classes=['panel-df'])
     gspec[12, :4] = pn.Row(html_panef, max_height=100, margin=(115,5,5,5))
 
-
+# GridSpec for PDF
+gspec_pdf = pn.GridSpec(sizing_mode='stretch_both')
+gspec_pdf[0,:4] = pn.Row(html_paneh, margin=5, max_height=150, align='center')
+gspec_pdf[1, :4] = pn.Row(html_pane, html_pane8,html_pane2, margin=5, align='center')
+gspec_pdf[2, :4] = pn.Row(html_pane5,html_pane9,html_pane10,html_pane11, margin=5, align='center')
+gspec_pdf[4, :4] = pn.Row(function_for_plot, margin=(100, 5, 5, 5), align='center')
+gspec_pdf[5, :4] = pn.Row(pn.Column(top5providers,bot5providers), margin=5, css_classes=['panel-df'], align='center')
+gspec_pdf[6, :4] = pn.Row(pn.Column(PBC,billing_cat_multiindex_rev), margin=30, max_width=1200, css_classes=['panel-df2'], align='center') #bcat_header
+gspec_pdf[8, :4] = pn.Row(pn.Column(p3), margin=5, align='center')
+gspec_pdf[9, :4] = pn.Row(function_for_plot_balance, margin=(900, 5, 5, 5), align='center') #pn.Spacer(background='orange',height=50)
+gspec_pdf[10, :4] = pn.Row(function_for_plot_er, margin=(1050, 5, 5, 5), align='center') #pn.Spacer(background='orange',height=50)
+gspec_pdf[11, :4] = pn.Row(top10institutions, margin=(1200, 20, 20, 20), css_classes=['panel-df'], align='center')
+gspec_pdf[12, :4] = pn.Row(top10providers, margin=(1350, 20, 20, 20), css_classes=['panel-df'], align='center')
+gspec_pdf[13, :4] = pn.Row(html_panef, max_height=100, margin=(1500,5,5,5), align='center')
 
 
 # gspec2 = pn.GridSpec(sizing_mode='stretch_both')
@@ -2313,6 +2361,24 @@ else:
 # gspec4[3, :4] = pn.Row(pn.Column(client_cb_plot_callback),sizing_mode='stretch_width', margin=5)
 # gspec4[4, :4] = pn.Row(html_panef, max_height=100, margin=5)
 
+gspec_pdf.save('rev_dashboard1.html', resources=INLINE, embed=True)
+# import pdfgen
+
+# options = {
+#     'scale': 2.0,
+#     'format': 'A4',
+#     'landscape':True,
+#       'printBackground': True,
+#     'margin': {
+#         'top': '0',
+#         'right': '0',
+#         'bottom': '0',
+#         'left': '0',
+#     },
+# }
+# # pdfgen.sync.from_file('rev_dashboard.html', 'out.pdf', options=options)
+# asyncio.get_event_loop().run_until_complete(generate_pdf(r"C:\Users\Mariano\PycharmProjects\Pune\fc-product\data\rev_dashboard.html", "html_pdf.pdf"))
+
 
 rev_dashboard = pn.Tabs(
     ('Home', gspec),
@@ -2320,9 +2386,7 @@ rev_dashboard = pn.Tabs(
     # ('White Label',gspec4),
     # ('Appendix', gspec3)
 ).servable()
-
-
-gspec.save('rev_dashboard.html', resources=INLINE, embed=True)                         ## how to save as an html file
+                      ## how to save as an html file
 # from bokeh.io import export_png
 #
 # export_png(top10providers, filename="plot.png")
