@@ -2361,7 +2361,7 @@ gspec_pdf[13, :4] = pn.Row(html_panef, max_height=100, margin=(1500,5,5,5), alig
 # gspec4[3, :4] = pn.Row(pn.Column(client_cb_plot_callback),sizing_mode='stretch_width', margin=5)
 # gspec4[4, :4] = pn.Row(html_panef, max_height=100, margin=5)
 
-gspec_pdf.save('rev_dashboard1.html', resources=INLINE, embed=True)
+gspec_pdf.save('rev_dashboard.html', resources=INLINE, embed=True)
 # import pdfgen
 
 # options = {
