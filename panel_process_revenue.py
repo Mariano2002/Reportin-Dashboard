@@ -2392,7 +2392,7 @@ rev_dashboard = pn.Tabs(
 # export_png(top10providers, filename="plot.png")
 
 me = "anussbaum@statestreet.com"   #testing set
-to = "anussbaum@statestreet.com"
+to = "anussbaum@statestreet.com,btreves@globallink.com,eric_wolf@statestreet.com,KCConn@StateStreet.com,gpfortuna@statestreet.com,SDawson1@StateStreet.com,mjshapcott@statestreet.com,GPennycooke@StateStreet.com"
 bcc = "Blake, anussbaum@statestreet.com"
 body = ("Attached is the Fund Connect Performance Dashboard as of " + latest_dt.strftime("%m-%d-%y") + ":" + "\n"
        "$" +filtered_total_bal_usde_str + "B is the current balance and this is a change of " + filtered_total_bal_chg_str +"%" + " and $" + filtered_total_bal_chg_usd_str +"B." + "\n" + "\n"
