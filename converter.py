@@ -1,6 +1,6 @@
 import pdfgen
 options = {
-    'scale': 1.0,
+    'scale': 1.5,
     'format': 'A4',
     'landscape':True,
     'printBackground': True,
@@ -12,4 +12,4 @@ options = {
     },
 }
 
-pdfgen.sync.from_file('rev_dashboard.html', 'out.pdf', options=options)
+pdfgen.sync.from_file('rev_dashboard_pdf.html', 'out.pdf', options=options)
