@@ -26,36 +26,10 @@ from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
 import smtplib
+from email.message import EmailMessage
 import argparse
 from win32api import GetSystemMetrics
-from bokeh.io import export_svgs
-import imgkit
-import asyncio
-from pyppeteer import launch
-import os
-
-async def generate_pdf(sourcepath, output):
-    browser = await launch(
-        handleSIGINT=False,
-        handleSIGTERM=False,
-        handleSIGHUP=False
-    )
-    page = await browser.newPage()
-    await page.goto(sourcepath, {'waitUntil': 'networkidle2'})
-    await page.pdf({
-      'path': output,
-      'scale': 2.0,
-      'format': 'A4',
-      'printBackground': True,
-      'landscape': True,
-      'margin': {
-        'top': 0,
-        'bottom': 0,
-        'left': 0,
-        'right': 0
-      }
-    })
-    await browser.close()
+import subprocess
 
 # Step 1
 # Import Pickled Files
@@ -1964,7 +1938,7 @@ def prior_month():
         return pm
 
 
-# prior_month_revenue = pvt_mtd.loc[pvt_mtd['BALANCE_DT'].dt.month == prior_month(), 'ESTIMATED_REVENUE'].sum()/1000000   ##this is the prior month's estimated revenue calculation
+prior_month_revenue = pvt_mtd.loc[pvt_mtd['BALANCE_DT'].dt.month == prior_month(), 'ESTIMATED_REVENUE'].sum()/1000000   ##this is the prior month's estimated revenue calculation
 
 
 def color_choice(value):
@@ -2096,7 +2070,7 @@ table.panel-df2 {
 
 pn.extension(raw_css=[css])
 
-# prior_bday_string_header = prior_bday_string     #format header here
+prior_bday_string_header = prior_bday_string     #format header here
 
 html_pane = pn.pane.HTML("""
 
@@ -2122,27 +2096,27 @@ html_pane2 = pn.pane.HTML("""
 
 
 
-# html_pane3 = pn.pane.HTML("""
-# <h2>Portal Est. Revenue </h2>
-#
-# <code>
-#
-# <h1>${total_portal:,.2f}K | {total_portal_chg:.2f}%</h1>
-#
-#
-# """.format(total_portal = total_portal, total_portal_chg = total_portal_chg), style={'background-color': 'e1e7e3', 'border': '2px solid black',
-#             'border-radius': '5px',  'font-size': '12px', 'text-align':'center', 'width':'300px', 'color': color_choice(total_portal_chg)}, width_policy='max')
+html_pane3 = pn.pane.HTML("""
+<h2>Portal Est. Revenue </h2>
+
+<code>
+
+<h1>${total_portal:,.2f}K | {total_portal_chg:.2f}%</h1>
+
+
+""".format(total_portal = total_portal, total_portal_chg = total_portal_chg), style={'background-color': 'e1e7e3', 'border': '2px solid black',
+            'border-radius': '5px',  'font-size': '12px', 'text-align':'center', 'width':'300px', 'color': color_choice(total_portal_chg)}, width_policy='max')
 
 
 
-# html_pane4 = pn.pane.HTML("""
-# <h2>Sweep Est. Revenue</h2>
-#
-# <code>
-#    <h1>${total_sweep:,.2f}K | {total_sweep_chg:.2f}%</h1>
-#
-# """.format(total_sweep = total_sweep, total_sweep_chg = total_sweep_chg), style={'background-color': 'e1e7e3', 'border': '2px solid black',
-#             'border-radius': '5px',  'font-size': '12px', 'text-align':'center', 'width':'300px', 'color': color_choice(total_sweep_chg)})
+html_pane4 = pn.pane.HTML("""
+<h2>Sweep Est. Revenue</h2>
+
+<code>
+   <h1>${total_sweep:,.2f}K | {total_sweep_chg:.2f}%</h1>
+
+""".format(total_sweep = total_sweep, total_sweep_chg = total_sweep_chg), style={'background-color': 'e1e7e3', 'border': '2px solid black',
+            'border-radius': '5px',  'font-size': '12px', 'text-align':'center', 'width':'300px', 'color': color_choice(total_sweep_chg)})
 
 
 html_pane5 = pn.pane.HTML("""
@@ -2154,14 +2128,14 @@ html_pane5 = pn.pane.HTML("""
 """.format(current_mtd_sum = current_mtd_sum), style={'background-color': 'e1e7e3', 'border': border_col_change(current_mtd_sum),
             'border-radius': '5px',  'font-size': '12px', 'text-align':'center', 'width':'300px', 'color': color_choice(current_mtd_sum)})
 
-# html_pane6 = pn.pane.HTML("""
-# <h2>Prior Month Est. Revenue</h2>
-#
-# <code>
-#    <h1>${prior_month_revenue:.2f}M</h1>
-#
-# """.format(prior_month_revenue = prior_month_revenue), style={'background-color': 'e1e7e3', 'border': '2px solid black',
-#             'border-radius': '5px',  'font-size': '12px', 'text-align':'center', 'width':'300px'})
+html_pane6 = pn.pane.HTML("""
+<h2>Prior Month Est. Revenue</h2>
+
+<code>
+   <h1>${prior_month_revenue:.2f}M</h1>
+
+""".format(prior_month_revenue = prior_month_revenue), style={'background-color': 'e1e7e3', 'border': '2px solid black',
+            'border-radius': '5px',  'font-size': '12px', 'text-align':'center', 'width':'300px'})
 
 
 html_pane8 = pn.pane.HTML("""
@@ -2212,45 +2186,45 @@ html_paneh = pn.pane.HTML("""
 
 """.format(latest_dt_str = latest_dt_str), style={'background-color': '#0a2f5d', 'color': 'white', 'border': '2px solid black',
             'border-radius': '5px',  'font-size': '16px', 'height':'225px'}, width_policy='max')
-#
-# html_paneh2 = pn.pane.HTML("""
-#
-# <figure>
-# <img src="https://www.fundconnectportal.com/assets/logo-light.svg" class="logo_light">
-# <h3>Volume Dashboard</h3>
-# <p>Data is as of : {latest_dt_str}. Click on drop down menus to slice data as desired. To sort by column value, click on column name to toggle ascending/ descending. Category and Instituion Selection menus are prioritized over Provider Selection.</p>
-# </figure>
-#
-#
-#
-# """.format(latest_dt_str = latest_dt_str), style={'background-color': '#0a2f5d', 'color': 'white', 'border': '2px solid black',
-#             'border-radius': '5px',  'font-size': '16px', 'height':'225px'}, width_policy='max')
-#
-# html_paneh3 = pn.pane.HTML("""
-#
-# <figure>
-# <img src="https://www.fundconnectportal.com/assets/logo-light.svg" class="logo_light">
-# <h3>Volume Dashboard</h3>
-# <p>Data is as of : {latest_dt_str}. Below, please find the appendix including assorted useful tables. </p>
-# </figure>
-#
-#
-#
-# """.format(latest_dt_str = latest_dt_str), style={'background-color': '#0a2f5d', 'color': 'white', 'border': '2px solid black',
-#             'border-radius': '5px',  'font-size': '16px', 'height':'225px'}, width_policy='max')
-#
-# html_paneh4 = pn.pane.HTML("""
-#
-# <figure>
-# <img src="https://www.fundconnectportal.com/assets/logo-light.svg" class="logo_light">
-# <h3>Volume Dashboard</h3>
-# <p>Data is as of : {latest_dt_str}. Below, please find view White Label performance. </p>
-# </figure>
-#
-#
-#
-# """.format(latest_dt_str = latest_dt_str), style={'background-color': '#0a2f5d', 'color': 'white', 'border': '2px solid black',
-#             'border-radius': '5px',  'font-size': '16px', 'height':'265px'}, width_policy='max')
+
+html_paneh2 = pn.pane.HTML("""
+
+<figure>
+<img src="https://www.fundconnectportal.com/assets/logo-light.svg" class="logo_light">
+<h3>Volume Dashboard</h3>
+<p>Data is as of : {latest_dt_str}. Click on drop down menus to slice data as desired. To sort by column value, click on column name to toggle ascending/ descending. Category and Instituion Selection menus are prioritized over Provider Selection.</p>
+</figure>
+
+
+
+""".format(latest_dt_str = latest_dt_str), style={'background-color': '#0a2f5d', 'color': 'white', 'border': '2px solid black',
+            'border-radius': '5px',  'font-size': '16px', 'height':'225px'}, width_policy='max')
+
+html_paneh3 = pn.pane.HTML("""
+
+<figure>
+<img src="https://www.fundconnectportal.com/assets/logo-light.svg" class="logo_light">
+<h3>Volume Dashboard</h3>
+<p>Data is as of : {latest_dt_str}. Below, please find the appendix including assorted useful tables. </p>
+</figure>
+
+
+
+""".format(latest_dt_str = latest_dt_str), style={'background-color': '#0a2f5d', 'color': 'white', 'border': '2px solid black',
+            'border-radius': '5px',  'font-size': '16px', 'height':'225px'}, width_policy='max')
+
+html_paneh4 = pn.pane.HTML("""
+
+<figure>
+<img src="https://www.fundconnectportal.com/assets/logo-light.svg" class="logo_light">
+<h3>Volume Dashboard</h3>
+<p>Data is as of : {latest_dt_str}. Below, please find view White Label performance. </p>
+</figure>
+
+
+
+""".format(latest_dt_str = latest_dt_str), style={'background-color': '#0a2f5d', 'color': 'white', 'border': '2px solid black',
+            'border-radius': '5px',  'font-size': '16px', 'height':'265px'}, width_policy='max')
 
 html_panef = pn.pane.HTML("""
 
@@ -2320,82 +2294,164 @@ else:
     gspec[11, :4] = pn.Row(top10providers, margin=(100, 20, 20, 20), css_classes=['panel-df'])
     gspec[12, :4] = pn.Row(html_panef, max_height=100, margin=(115,5,5,5))
 
+
+html_pane_pdf = pn.pane.HTML("""
+
+
+<h2>Total Balance</h2>
+
+
+<code>
+
+<h1>${filtered_total_bal_usde:,.2f}B | {filtered_total_bal_chg:.2f}%</h1>
+""".format(filtered_total_bal_usde = filtered_total_bal_usde, filtered_total_bal_chg = filtered_total_bal_chg), style={'background-color': 'e1e7e3', 'border': border_col_change(filtered_total_bal_chg) ,
+            'border-radius': '5px',  'font-size': '8px', 'text-align':'center', 'width':'170px', 'height':'85px', 'color': color_choice(filtered_total_bal_chg)}, width_policy='max')
+
+
+html_pane8_pdf = pn.pane.HTML("""
+<h2>White Label Balance</h2>
+
+<code>
+   <h1>${total_cobrand:,.2f}B | {total_cobrand_chg:.2f}%</h1>
+
+""".format(total_cobrand = total_cobrand, total_cobrand_chg = total_cobrand_chg), style={'background-color': 'e1e7e3', 'border': border_col_change(total_cobrand_chg),
+            'border-radius': '5px',  'font-size': '8px', 'text-align':'center', 'width':'170px', 'height':'85px', 'color': color_choice(total_cobrand_chg)})
+
+
+html_pane2_pdf = pn.pane.HTML("""
+<h2>Estimated Revenue</h2>
+
+<code>
+
+<h1>${filtered_total_er:,.2f}K | {filtered_total_er_chg:.2f}%</h1>
+""".format(filtered_total_er = filtered_total_er, filtered_total_er_chg = filtered_total_er_chg), style={'background-color': 'e1e7e3', 'border': border_col_change(filtered_total_er_chg),
+            'border-radius': '5px',  'font-size': '8px', 'text-align':'center', 'width':'170px', 'height':'85px', 'color': color_choice(filtered_total_er_chg)}, width_policy='max')
+
+
+html_pane5_pdf = pn.pane.HTML("""
+<h2>MTD Est. Revenue</h2>
+
+<code>
+   <h1>${current_mtd_sum:.2f}M</h1>
+
+""".format(current_mtd_sum = current_mtd_sum), style={'background-color': 'e1e7e3', 'border': border_col_change(current_mtd_sum),
+            'border-radius': '5px',  'font-size': '8px', 'text-align':'center', 'width':'150px', 'height':'85px', 'color': color_choice(current_mtd_sum)})
+
+html_pane9_pdf = pn.pane.HTML("""
+<h2>Net Activity</h2>
+
+<code>
+   <h1>${net_activity:,.2f}M</h1>
+
+""".format(net_activity = net_activity), style={'background-color': 'e1e7e3', 'border': border_col_change(net_activity),
+            'border-radius': '5px',  'font-size': '8px', 'text-align':'center', 'width':'150px', 'height':'85px', 'color': color_choice(net_activity)})
+
+html_pane10_pdf = pn.pane.HTML("""
+<h2>Total Activity</h2>
+
+<code>
+   <h1>${total_activity:,.2f}B</h1>
+
+""".format(total_activity = total_activity), style={'background-color': 'e1e7e3', 'border': border_col_change(total_activity),
+            'border-radius': '5px',  'font-size': '8px', 'text-align':'center', 'width':'150px', 'height':'85px', 'color': color_choice(total_activity)})
+
+html_pane11_pdf = pn.pane.HTML("""
+<h2>Projected Balance</h2>
+
+<code>
+   <h1>${projected_balance:,.2f}B | {projected_balance_chg:.2f}%</h1>
+
+""".format(projected_balance = projected_balance, projected_balance_chg = projected_balance_chg), style={'background-color': 'e1e7e3', 'border': border_col_change(projected_balance_chg),
+            'border-radius': '5px',  'font-size': '8px', 'text-align':'center', 'width':'170px', 'height':'85px', 'color': color_choice(projected_balance_chg)})
+
+
 # GridSpec for PDF
 gspec_pdf = pn.GridSpec(sizing_mode='stretch_both')
-gspec_pdf[0,:4] = pn.Row(html_paneh, margin=5, max_height=150, align='center')
-gspec_pdf[1, :4] = pn.Row(html_pane, html_pane8,html_pane2, margin=5, align='center')
-gspec_pdf[2, :4] = pn.Row(html_pane5,html_pane9,html_pane10,html_pane11, margin=5, align='center')
-gspec_pdf[4, :4] = pn.Row(function_for_plot, margin=(100, 5, 5, 5), align='center')
-gspec_pdf[5, :4] = pn.Row(pn.Column(top5providers,bot5providers), margin=5, css_classes=['panel-df'], align='center')
-gspec_pdf[6, :4] = pn.Row(pn.Column(PBC,billing_cat_multiindex_rev), margin=30, max_width=1200, css_classes=['panel-df2'], align='center') #bcat_header
-gspec_pdf[8, :4] = pn.Row(pn.Column(p3), margin=5, align='center')
-gspec_pdf[9, :4] = pn.Row(function_for_plot_balance, margin=(900, 5, 5, 5), align='center') #pn.Spacer(background='orange',height=50)
-gspec_pdf[10, :4] = pn.Row(function_for_plot_er, margin=(1050, 5, 5, 5), align='center') #pn.Spacer(background='orange',height=50)
-gspec_pdf[11, :4] = pn.Row(top10institutions, margin=(1200, 20, 20, 20), css_classes=['panel-df'], align='center')
-gspec_pdf[12, :4] = pn.Row(top10providers, margin=(1350, 20, 20, 20), css_classes=['panel-df'], align='center')
-gspec_pdf[13, :4] = pn.Row(html_panef, max_height=100, margin=(1500,5,5,5), align='center')
+# gspec_pdf[0,:4] = pn.Row(html_paneh, margin=5, max_height=150, align='center')
+gspec_pdf[0, :4] = pn.Row(html_pane_pdf, html_pane8_pdf,html_pane2_pdf, align='center')
+gspec_pdf[1, :4] = pn.Row(html_pane5_pdf,html_pane9_pdf,html_pane10_pdf, html_pane11_pdf, align='center')
+gspec_pdf[2, :4] = pn.Row(function_for_plot, margin=(5, 5, 5, 5), align='center')
+gspec_pdf[3, :4] = pn.Row(pn.Column(top5providers,bot5providers), margin=(80, 5, 5, 5), css_classes=['panel-df'], align='center')
+gspec_pdf[4, :4] = pn.Row(pn.Column(PBC,billing_cat_multiindex_rev), margin=(150, 5, 5, 5), max_width=1200, css_classes=['panel-df2'], align='center') #bcat_header
+gspec_pdf[5, :4] = pn.Row(pn.Column(p3), margin=(170, 5, 5, 5), align='center')
+gspec_pdf[6, :4] = pn.Row(function_for_plot_balance, margin=(200, 5, 5, 5), align='center') #pn.Spacer(background='orange',height=50)
+gspec_pdf[7, :4] = pn.Row(function_for_plot_er, margin=(80, 5, 5, 5), align='center') #pn.Spacer(background='orange',height=50)
+gspec_pdf[8, :4] = pn.Row(top10institutions, margin=(210, 20, 20, 20), css_classes=['panel-df'], align='center')
+gspec_pdf[9, :4] = pn.Row(top10providers, margin=(340, 20, 20, 20), css_classes=['panel-df'], align='center')
 
 
-# gspec2 = pn.GridSpec(sizing_mode='stretch_both')
-# gspec2[0,:4] = pn.Row(html_paneh2, margin=5, max_height=150)
-# # gspec2[1, :3] = pn.Row(pn.Column(provider_choice, client_rc_callback),prov_bc_choice,pn.Column(prov_ins_choice,client_ins_callback),sizing_mode='stretch_width', margin=5) #good
-# gspec2[1,:4] = pn.Row(prov_bc_choice,sizing_mode='stretch_width',max_height=75 , margin=5)
-# gspec2[2, 0:2] = pn.Row(provider_col,sizing_mode='stretch_width', margin=(5, 5, 20, 5))
-# gspec2[2, 2:4] = pn.Row(ins_col,sizing_mode='stretch_width', margin=(5, 5, 20, 5))
-# gspec2[3, 0:2] = pn.Row(client_prov_plot_callback, margin=5)
-# gspec2[3, 2:4] = pn.Row(client_inst_callback, margin=5)
-# gspec2[4, :4] = pn.Row(html_panef, max_height=100, margin=5)
-#
-# gspec3 = pn.GridSpec(sizing_mode='stretch_both')
-# gspec3[0,:4] = pn.Row(html_paneh3, margin=5, max_height=175)
-# gspec3[1, 0:2] = pn.Row(pn.Column(top5providers, bot5providers), sizing_mode='stretch_width', margin=5, css_classes=['panel-df'])
-# gspec3[1, 2:3] = pn.Row(provider_netActivity_pvt_head , margin=5, css_classes=['panel-df'])
-# gspec3[1, 3:4] = pn.Row(provider_netActivity_pvt_tail , margin=5, css_classes=['panel-df'])
-# gspec3[2, :4] = pn.Row(html_panef, max_height=100, margin=5)
-#
-# gspec4 = pn.GridSpec(sizing_mode='stretch_both')
-# gspec4[0,:4] = pn.Row(html_paneh4, margin=5, max_height=175)
-# gspec4[1,:4] = pn.Row(prov_bc_choice,sizing_mode='stretch_width',max_height=75 , margin=5)
-# gspec4[2, 0:2] = pn.Row(pn.Column(cobrand_choice, cobrand_callback),sizing_mode='stretch_width', margin=(5, 5, 25, 5))
-# gspec4[2, 2:4] = pn.Row(pn.Column(p4),sizing_mode='stretch_width', margin=5)
-# gspec4[3, :4] = pn.Row(pn.Column(client_cb_plot_callback),sizing_mode='stretch_width', margin=5)
-# gspec4[4, :4] = pn.Row(html_panef, max_height=100, margin=5)
+gspec2 = pn.GridSpec(sizing_mode='stretch_both')
+gspec2[0,:4] = pn.Row(html_paneh2, margin=5, max_height=150)
+# gspec2[1, :3] = pn.Row(pn.Column(provider_choice, client_rc_callback),prov_bc_choice,pn.Column(prov_ins_choice,client_ins_callback),sizing_mode='stretch_width', margin=5) #good
+gspec2[1,:4] = pn.Row(prov_bc_choice,sizing_mode='stretch_width',max_height=75 , margin=5)
+gspec2[2, 0:2] = pn.Row(provider_col,sizing_mode='stretch_width', margin=(5, 5, 20, 5))
+gspec2[2, 2:4] = pn.Row(ins_col,sizing_mode='stretch_width', margin=(5, 5, 20, 5))
+gspec2[3, 0:2] = pn.Row(client_prov_plot_callback, margin=5)
+gspec2[3, 2:4] = pn.Row(client_inst_callback, margin=5)
+gspec2[4, :4] = pn.Row(html_panef, max_height=100, margin=5)
 
-gspec_pdf.save('rev_dashboard1.html', resources=INLINE, embed=True)
-# import pdfgen
+gspec3 = pn.GridSpec(sizing_mode='stretch_both')
+gspec3[0,:4] = pn.Row(html_paneh3, margin=5, max_height=175)
+gspec3[1, 0:2] = pn.Row(pn.Column(top5providers, bot5providers), sizing_mode='stretch_width', margin=5, css_classes=['panel-df'])
+gspec3[1, 2:3] = pn.Row(provider_netActivity_pvt_head , margin=5, css_classes=['panel-df'])
+gspec3[1, 3:4] = pn.Row(provider_netActivity_pvt_tail , margin=5, css_classes=['panel-df'])
+gspec3[2, :4] = pn.Row(html_panef, max_height=100, margin=5)
 
-# options = {
-#     'scale': 2.0,
-#     'format': 'A4',
-#     'landscape':True,
-#       'printBackground': True,
-#     'margin': {
-#         'top': '0',
-#         'right': '0',
-#         'bottom': '0',
-#         'left': '0',
-#     },
-# }
-# # pdfgen.sync.from_file('rev_dashboard.html', 'out.pdf', options=options)
-# asyncio.get_event_loop().run_until_complete(generate_pdf(r"C:\Users\Mariano\PycharmProjects\Pune\fc-product\data\rev_dashboard.html", "html_pdf.pdf"))
+gspec4 = pn.GridSpec(sizing_mode='stretch_both')
+gspec4[0,:4] = pn.Row(html_paneh4, margin=5, max_height=175)
+gspec4[1,:4] = pn.Row(prov_bc_choice,sizing_mode='stretch_width',max_height=75 , margin=5)
+gspec4[2, 0:2] = pn.Row(pn.Column(cobrand_choice, cobrand_callback),sizing_mode='stretch_width', margin=(5, 5, 25, 5))
+gspec4[2, 2:4] = pn.Row(pn.Column(p4),sizing_mode='stretch_width', margin=5)
+gspec4[3, :4] = pn.Row(pn.Column(client_cb_plot_callback),sizing_mode='stretch_width', margin=5)
+gspec4[4, :4] = pn.Row(html_panef, max_height=100, margin=5)
 
+gspec.save('rev_dashboard.html', resources=INLINE, embed=True)
+gspec_pdf.save('rev_dashboard_pdf.html', resources=INLINE, embed=True)
+subprocess.call(["python.exe", "converter.py"], shell=True)
 
 rev_dashboard = pn.Tabs(
     ('Home', gspec),
-    # ('Providers and Institutions', gspec2),
-    # ('White Label',gspec4),
-    # ('Appendix', gspec3)
+    ('Providers and Institutions', gspec2),
+    ('White Label',gspec4),
+    ('Appendix', gspec3)
 ).servable()
-                      ## how to save as an html file
-# from bokeh.io import export_png
-#
-# export_png(top10providers, filename="plot.png")
-
-me = "anussbaum@statestreet.com"   #testing set
-to = "anussbaum@statestreet.com"
-bcc = "Blake, anussbaum@statestreet.com"
-body = ("Attached is the Fund Connect Performance Dashboard as of " + latest_dt.strftime("%m-%d-%y") + ":" + "\n"
-       "$" +filtered_total_bal_usde_str + "B is the current balance and this is a change of " + filtered_total_bal_chg_str +"%" + " and $" + filtered_total_bal_chg_usd_str +"B." + "\n" + "\n"
-        "All values are expressed in USD. (Please open with Chrome for optimal performance.)")
 
 
+fromaddr = "marianobaci46@gmail.com"
+toaddr = "marianobaci22@gmail.com"
+msg = MIMEMultipart()
+msg['From'] = fromaddr
+msg['To'] = toaddr
+msg['Subject'] = "Fund Connect Volume Dashboard "+latest_dt.strftime("%m-%d-%y")
+
+body = "Attached is the Fund Connect Performance Dashboard as of " + latest_dt.strftime("%m-%d-%y") + ":" + "\n$" + filtered_total_bal_usde_str + "B is the current balance and this is a change of " + filtered_total_bal_chg_str + "%" + " and $" + filtered_total_bal_chg_usd_str + "B." + "\n" + "\nAll values are expressed in USD. (Please open with Chrome for optimal performance.) \nWeb: http://btreves01-vdi.pc.ny2.eexchange.com:5006/panel_process"
+
+msg.attach(MIMEText(body, 'plain'))
+
+filename = "out.pdf"
+attachment = open("./out.pdf", "rb")
+p = MIMEBase('application', 'octet-stream')
+p.set_payload((attachment).read())
+encoders.encode_base64(p)
+p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+msg.attach(p)
+
+filename1 = "rev_dashboard.html"
+attachment1 = open("./rev_dashboard.html", "rb")
+p1 = MIMEBase('application', 'octet-stream')
+p1.set_payload((attachment1).read())
+encoders.encode_base64(p1)
+p1.add_header('Content-Disposition', "attachment; filename= %s" % filename1)
+msg.attach(p1)
+
+s = smtplib.SMTP('smtp.gmail.com', 587)
+
+s.starttls()
+
+s.login(fromaddr, "mycgaihtnmlmenwi")
+
+text = msg.as_string()
+
+s.sendmail(fromaddr, toaddr, text)
+
+s.quit()
