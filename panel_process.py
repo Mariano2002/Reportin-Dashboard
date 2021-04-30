@@ -28,6 +28,8 @@ from email import encoders
 import smtplib
 import argparse
 import locale
+from win32api import GetSystemMetrics
+import subprocess
 
 # TODO: pickle this (df_mdm renamed to d_master_for_panel)and unpickle it within the panel function, split out the panel function to a new file
 
@@ -74,8 +76,6 @@ df_bcat_NullRateType_for_panel = pd.read_pickle(df_bcat_NullRateType_import)
 df_base_volume_import = app_home + "df_base_volume.pkl"
 df_base_volume_for_panel = pd.read_pickle(df_base_volume_import)
 
-
-
 # Step 2
 # A. Redeclare necessary date variables
 earliest_dt = df_master_for_panel['BALANCE_DT'].min()
@@ -88,7 +88,6 @@ latest_dt_m1 = latest_dt - pd.tseries.offsets.BDay(1)
 latest_dt_m1_str = latest_dt_m1.strftime("%Y-%m-%d")
 prior_bday = datetime.today() - pd.tseries.offsets.BDay(1)
 prior_bday_string = prior_bday.strftime("%Y-%m-%d")
-
 
 print(latest_dt)
 # Step 3
@@ -112,16 +111,16 @@ filtered_total_bal_usde_fullvalue = (
     df_master_for_panel.loc[df_master_for_panel['BALANCE_DT'] == latest_dt_str, 'BALANCE_USDE'].sum())
 filtered_total_bal_chg = ((filtered_total_bal_usde - (df_master_for_panel.loc[df_master_for_panel[
                                                                                   'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) / (
-                                      df_master_for_panel.loc[df_master_for_panel[
-                                                                  'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) * 100
+                                  df_master_for_panel.loc[df_master_for_panel[
+                                                              'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) * 100
 filtered_total_bal_chg_usd = ((filtered_total_bal_usde - (df_master_for_panel.loc[df_master_for_panel[
                                                                                       'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)))
 filtered_total_er = df_master_for_panel.loc[
                         df_master_for_panel['BALANCE_DT'] == latest_dt_str, 'ESTIMATED_REVENUE'].sum() / 1000
 filtered_total_er_chg = ((filtered_total_er - (df_master_for_panel.loc[df_master_for_panel[
                                                                            'BALANCE_DT'] == latest_dt_m1_str, 'ESTIMATED_REVENUE'].sum() / 1000)) / (
-                                     df_master_for_panel.loc[df_master_for_panel[
-                                                                 'BALANCE_DT'] == latest_dt_m1_str, 'ESTIMATED_REVENUE'].sum() / 1000)) * 100
+                                 df_master_for_panel.loc[df_master_for_panel[
+                                                             'BALANCE_DT'] == latest_dt_m1_str, 'ESTIMATED_REVENUE'].sum() / 1000)) * 100
 
 # volume
 buy_order_sum = (
@@ -132,7 +131,6 @@ net_activity = (buy_order_sum - sell_order_sum) / 1000000
 total_activity = (df_base_volume_for_panel['TRADE_SUM_USDE'].sum()) / 1000000000
 projected_balance = ((net_activity * 1000000) + filtered_total_bal_usde_fullvalue) / 1000000000
 projected_balance_chg = ((projected_balance - filtered_total_bal_usde) / (filtered_total_bal_usde)) * 100
-
 
 # Step 6
 # Create pivot tables that will be used for the plots. Next 7 lines are old categories saved in case they are needed again
@@ -169,7 +167,6 @@ mdm_pvt_alt02 = pd.pivot_table(df_master_for_panel, values=['BALANCE_USDE', 'EST
                                index=['BALANCE_DT', 'FUND_CATEGORY', 'INV_INSTITUTION_NAME', 'FUND_ID'], aggfunc=np.sum)
 mdm_pvt_alt002 = mdm_pvt_alt02.reset_index()
 
-
 data_for_df_whitelabel = df_master_for_panel.loc[df_master_for_panel['CB_DESCRIPTION'] != 'Globallink Co-Brand']
 mdm_pvt_alt3 = pd.pivot_table(data_for_df_whitelabel, values=['BALANCE_USDE', 'ESTIMATED_REVENUE'],
                               index=['BALANCE_DT', 'CB_DESCRIPTION'], aggfunc=np.sum)
@@ -199,7 +196,7 @@ mdm_pvt_alt['BILLABLE_BPS'] = (mdm_pvt_alt.groupby(level='RATE_TYPE')['ESTIMATED
 
 # e. Calculate category percent of total
 mdm_pvt_alt['PCT_OF_TOTAL'] = (
-            mdm_pvt_alt.groupby(level='RATE_TYPE')['BALANCE_USDE'].shift(0) / filtered_total_bal_usde_fullvalue)
+        mdm_pvt_alt.groupby(level='RATE_TYPE')['BALANCE_USDE'].shift(0) / filtered_total_bal_usde_fullvalue)
 
 # e. repeat steps A, B, and D with current date dataframe for header
 
@@ -218,16 +215,16 @@ mdm_pvt_current_dt['BILLABLE_BPS'] = (mdm_pvt_current_dt.groupby(level='RATE_TYP
                                       mdm_pvt_current_dt.groupby(level='RATE_TYPE')['BALANCE_USDE'].shift(
                                           0)) * 1000  # mdm_pvt_current_dt.groupby(level='RATE_TYPE')['BALANCE_USDE'].sum()      ## create weights here
 mdm_pvt_current_dt['PCT_OF_TOTAL'] = (
-            mdm_pvt_current_dt.groupby(level='RATE_TYPE')['BALANCE_USDE'].shift(0) / filtered_total_bal_usde_fullvalue)
+        mdm_pvt_current_dt.groupby(level='RATE_TYPE')['BALANCE_USDE'].shift(0) / filtered_total_bal_usde_fullvalue)
 
 mdm_pvt_alt.sort_values('BALANCE_DAY_CHANGE_PERCENT', inplace=True, ascending=False)
 mdm_pvt_current_dt.sort_values('BALANCE_DAY_CHANGE_PERCENT', inplace=True, ascending=False)
 
 mdm_pvt_current_dt.loc[('', 'TOTAL'), :] = (
-mdm_pvt_current_dt['PCT_OF_TOTAL'].sum(), mdm_pvt_current_dt['BALANCE_USDE'].sum(),
-mdm_pvt_current_dt['ESTIMATED_REVENUE'].sum(), filtered_total_bal_chg / 100, filtered_total_er_chg / 100,
-mdm_pvt_current_dt['BALANCE_DAY_CHANGE'].sum(), mdm_pvt_current_dt['ESTIMATED_REVENUE_DAY_CHANGE'].sum(),
-mdm_pvt_current_dt['BILLABLE_BPS'].mean())
+    mdm_pvt_current_dt['PCT_OF_TOTAL'].sum(), mdm_pvt_current_dt['BALANCE_USDE'].sum(),
+    mdm_pvt_current_dt['ESTIMATED_REVENUE'].sum(), filtered_total_bal_chg / 100, filtered_total_er_chg / 100,
+    mdm_pvt_current_dt['BALANCE_DAY_CHANGE'].sum(), mdm_pvt_current_dt['ESTIMATED_REVENUE_DAY_CHANGE'].sum(),
+    mdm_pvt_current_dt['BILLABLE_BPS'].mean())
 #############################################################################################################
 
 mdm_pvt_billing = pd.pivot_table(df_master_for_panel, values=['BALANCE_USDE', 'ESTIMATED_REVENUE'],
@@ -265,19 +262,18 @@ mdm_pvt_billing_current_dt['ESTIMATED_REVENUE_DAY_CHANGE'] = mdm_pvt_billing.gro
 mdm_pvt_billing_current_dt['BILLABLE_BPS'] = (mdm_pvt_billing.groupby(level='RATE_TYPE')['ESTIMATED_REVENUE'].shift(
     periods=0) / mdm_pvt_billing.groupby(level='RATE_TYPE')['BALANCE_USDE'].shift(periods=0)) * 1000
 mdm_pvt_billing_current_dt['PCT_OF_TOTAL'] = (
-            mdm_pvt_billing_current_dt.groupby(level='RATE_TYPE')['BALANCE_USDE'].shift(
-                periods=0) / filtered_total_bal_usde_fullvalue)
+        mdm_pvt_billing_current_dt.groupby(level='RATE_TYPE')['BALANCE_USDE'].shift(
+            periods=0) / filtered_total_bal_usde_fullvalue)
 
 mdm_pvt_billing_current_dt['RRT_INDEX'] = [6, 1, 4, 2, 3, 5]
 
 mdm_pvt_billing_current_dt.sort_values('RRT_INDEX', inplace=True, ascending=True)
 
-
 mdm_pvt_billing_current_dt.loc[('', 'TOTAL'), :] = (
-mdm_pvt_billing_current_dt['BALANCE_USDE'].sum(), mdm_pvt_billing_current_dt['ESTIMATED_REVENUE'].sum(),
-filtered_total_bal_chg / 100, filtered_total_er_chg / 100, mdm_pvt_billing_current_dt['BALANCE_DAY_CHANGE'].sum(),
-mdm_pvt_billing_current_dt['ESTIMATED_REVENUE_DAY_CHANGE'].sum(), mdm_pvt_billing_current_dt['BILLABLE_BPS'].mean(),
-mdm_pvt_billing_current_dt['PCT_OF_TOTAL'].sum(), 0)
+    mdm_pvt_billing_current_dt['BALANCE_USDE'].sum(), mdm_pvt_billing_current_dt['ESTIMATED_REVENUE'].sum(),
+    filtered_total_bal_chg / 100, filtered_total_er_chg / 100, mdm_pvt_billing_current_dt['BALANCE_DAY_CHANGE'].sum(),
+    mdm_pvt_billing_current_dt['ESTIMATED_REVENUE_DAY_CHANGE'].sum(), mdm_pvt_billing_current_dt['BILLABLE_BPS'].mean(),
+    mdm_pvt_billing_current_dt['PCT_OF_TOTAL'].sum(), 0)
 
 #############################################################################################################
 
@@ -289,23 +285,19 @@ billing_cat_multiindex = pd.pivot_table(df_master_for_panel_current_dt, values=[
                                         index=['BALANCE_DT', 'RATE_TYPE_CATEGORY', 'RATE_TYPE'], aggfunc=np.sum)
 billing_cat_multiindex.groupby(level=['RATE_TYPE_CATEGORY', 'RATE_TYPE'])
 
-
 billing_cat_multiindex['BALANCE_DAY_CHANGE_PERCENT'] = \
-hist_billing_cat_multiindex.groupby(level=['RATE_TYPE_CATEGORY', 'RATE_TYPE'])['BALANCE_USDE'].pct_change(
-    periods=1) * 100
+    hist_billing_cat_multiindex.groupby(level=['RATE_TYPE_CATEGORY', 'RATE_TYPE'])['BALANCE_USDE'].pct_change(
+        periods=1) * 100
 
 billing_cat_multiindex['BALANCE_DAY_CHANGE'] = (hist_billing_cat_multiindex.groupby(
     level=['RATE_TYPE_CATEGORY', 'RATE_TYPE'])['BALANCE_USDE'].shift(periods=0) - hist_billing_cat_multiindex.groupby(
     level=['RATE_TYPE_CATEGORY', 'RATE_TYPE'])['BALANCE_USDE'].shift(periods=1)) / 1000000
-
-
 
 billing_cat_multiindex['PCT_OF_TOTAL'] = ((billing_cat_multiindex.groupby(level=['RATE_TYPE_CATEGORY', 'RATE_TYPE'])[
                                                'BALANCE_USDE'].shift(
     periods=0) / filtered_total_bal_usde_fullvalue) * 100)
 
 billing_cat_multiindex['BALANCE_USDE'] = billing_cat_multiindex['BALANCE_USDE'] / 1000000
-
 
 billing_cat_multiindex['EXAMPLE'] = 120
 
@@ -343,8 +335,8 @@ del billing_cat_multiindex['TEMP_INDEX']
 
 # appends total row
 billing_cat_multiindex.loc[('', 'Total'), :] = (
-billing_cat_multiindex['PCT_OF_TOTAL'].sum(), billing_cat_multiindex['BALANCE_USDE'].sum(), filtered_total_bal_chg,
-billing_cat_multiindex['BALANCE_DAY_CHANGE'].sum(), 200)
+    billing_cat_multiindex['PCT_OF_TOTAL'].sum(), billing_cat_multiindex['BALANCE_USDE'].sum(), filtered_total_bal_chg,
+    billing_cat_multiindex['BALANCE_DAY_CHANGE'].sum(), 200)
 
 # renames columns in a visually appealing way
 billing_cat_multiindex.columns = ['Pct of Total', 'Balance USDE', 'Balance Change (%)', 'Balance Change ($)', 'Example']
@@ -417,10 +409,9 @@ top10institutions = top10institutions.reset_index()
 hist_top10institutions = hist_top10institutions.reset_index()
 
 top10institutions.loc[top10institutions['CB_DESCRIPTION'] != "Globallink Co-Brand", "INV_INSTITUTION_NAME"] = \
-top10institutions['INV_INSTITUTION_NAME'] + ' ??'
+    top10institutions['INV_INSTITUTION_NAME'] + ' ??'
 hist_top10institutions.loc[hist_top10institutions['CB_DESCRIPTION'] != "Globallink Co-Brand", "INV_INSTITUTION_NAME"] = \
-hist_top10institutions['INV_INSTITUTION_NAME'] + ' ??'
-
+    hist_top10institutions['INV_INSTITUTION_NAME'] + ' ??'
 
 # drops cobrand
 top10institutions = pd.pivot_table(top10institutions, index=['BALANCE_DT', 'INV_INSTITUTION_NAME', 'RATE_TYPE'])
@@ -428,7 +419,8 @@ hist_top10institutions = pd.pivot_table(hist_top10institutions,
                                         index=['BALANCE_DT', 'INV_INSTITUTION_NAME', 'RATE_TYPE'])
 
 top10institutions['BALANCE_DAY_CHANGE_PERCENT'] = \
-hist_top10institutions.groupby(level=['INV_INSTITUTION_NAME', 'RATE_TYPE'])['BALANCE_USDE'].pct_change(periods=1) * 100
+    hist_top10institutions.groupby(level=['INV_INSTITUTION_NAME', 'RATE_TYPE'])['BALANCE_USDE'].pct_change(
+        periods=1) * 100
 # top10institutions['ESTIMATED_REVENUE_DAY_CHANGE_PERCENT'] = hist_billing_cat_multiindex.groupby(level=['RATE_TYPE_CATEGORY', 'RATE_TYPE'])['ESTIMATED_REVENUE'].pct_change(periods=1)
 top10institutions['BALANCE_DAY_CHANGE'] = (hist_top10institutions.groupby(level=['INV_INSTITUTION_NAME', 'RATE_TYPE'])[
                                                'BALANCE_USDE'].shift(periods=0) -
@@ -604,16 +596,16 @@ mdm_pvt_country_current_dt['ESTIMATED_REVENUE_DAY_CHANGE'] = mdm_pvt_country.gro
                                                              mdm_pvt_country.groupby(level='COUNTRY_NAME')[
                                                                  'ESTIMATED_REVENUE'].shift(periods=1)
 mdm_pvt_country_current_dt['PCT_OF_TOTAL'] = (
-            mdm_pvt_country_current_dt.groupby(level='COUNTRY_NAME')['BALANCE_USDE'].shift(
-                periods=0) / filtered_total_bal_usde_fullvalue)
+        mdm_pvt_country_current_dt.groupby(level='COUNTRY_NAME')['BALANCE_USDE'].shift(
+            periods=0) / filtered_total_bal_usde_fullvalue)
 
 mdm_pvt_country.sort_values('BALANCE_DAY_CHANGE_PERCENT', inplace=True, ascending=False)
 mdm_pvt_country_current_dt.sort_values('BALANCE_DAY_CHANGE_PERCENT', inplace=True, ascending=False)
 
 mdm_pvt_country_current_dt.loc[('', 'TOTAL'), :] = (
-mdm_pvt_country_current_dt['BALANCE_USDE'].sum(), mdm_pvt_country_current_dt['ESTIMATED_REVENUE'].sum(),
-filtered_total_bal_chg / 100, filtered_total_er_chg / 100, mdm_pvt_country_current_dt['BALANCE_DAY_CHANGE'].sum(),
-mdm_pvt_country_current_dt['ESTIMATED_REVENUE_DAY_CHANGE'].sum(), mdm_pvt_country_current_dt['PCT_OF_TOTAL'].sum())
+    mdm_pvt_country_current_dt['BALANCE_USDE'].sum(), mdm_pvt_country_current_dt['ESTIMATED_REVENUE'].sum(),
+    filtered_total_bal_chg / 100, filtered_total_er_chg / 100, mdm_pvt_country_current_dt['BALANCE_DAY_CHANGE'].sum(),
+    mdm_pvt_country_current_dt['ESTIMATED_REVENUE_DAY_CHANGE'].sum(), mdm_pvt_country_current_dt['PCT_OF_TOTAL'].sum())
 
 # style pct of total as percentage
 mdm_pvt_country_current_dt.PCT_OF_TOTAL = (mdm_pvt_country_current_dt.PCT_OF_TOTAL * 100).round(2)
@@ -654,16 +646,17 @@ mdm_pvt_currency_current_dt['ESTIMATED_REVENUE_DAY_CHANGE'] = mdm_pvt_currency.g
                                                               mdm_pvt_currency.groupby(level='CURRENCY_NAME')[
                                                                   'ESTIMATED_REVENUE'].shift(periods=1)
 mdm_pvt_currency_current_dt['PCT_OF_TOTAL'] = (
-            mdm_pvt_currency_current_dt.groupby(level='CURRENCY_NAME')['BALANCE_USDE'].shift(
-                periods=0) / filtered_total_bal_usde_fullvalue)
+        mdm_pvt_currency_current_dt.groupby(level='CURRENCY_NAME')['BALANCE_USDE'].shift(
+            periods=0) / filtered_total_bal_usde_fullvalue)
 
 mdm_pvt_currency.sort_values('BALANCE_USDE', inplace=True, ascending=False)
 mdm_pvt_currency_current_dt.sort_values('BALANCE_USDE', inplace=True, ascending=False)
 
 mdm_pvt_currency_current_dt.loc[('', 'TOTAL'), :] = (
-mdm_pvt_currency_current_dt['BALANCE_USDE'].sum(), mdm_pvt_currency_current_dt['ESTIMATED_REVENUE'].sum(),
-filtered_total_bal_chg / 100, filtered_total_er_chg / 100, mdm_pvt_currency_current_dt['BALANCE_DAY_CHANGE'].sum(),
-mdm_pvt_currency_current_dt['ESTIMATED_REVENUE_DAY_CHANGE'].sum(), mdm_pvt_currency_current_dt['PCT_OF_TOTAL'].sum())
+    mdm_pvt_currency_current_dt['BALANCE_USDE'].sum(), mdm_pvt_currency_current_dt['ESTIMATED_REVENUE'].sum(),
+    filtered_total_bal_chg / 100, filtered_total_er_chg / 100, mdm_pvt_currency_current_dt['BALANCE_DAY_CHANGE'].sum(),
+    mdm_pvt_currency_current_dt['ESTIMATED_REVENUE_DAY_CHANGE'].sum(),
+    mdm_pvt_currency_current_dt['PCT_OF_TOTAL'].sum())
 
 # style pct of total as percentage
 mdm_pvt_currency_current_dt.PCT_OF_TOTAL = (mdm_pvt_currency_current_dt.PCT_OF_TOTAL * 100).round(2)
@@ -702,17 +695,14 @@ mdm_pvt_clients_current_dt['ESTIMATED_REVENUE_DAY_CHANGE'] = mdm_pvt_clients.gro
                                                              mdm_pvt_clients.groupby(level='PROVIDER_NAME')[
                                                                  'ESTIMATED_REVENUE'].shift(periods=1)
 mdm_pvt_clients_current_dt['PCT_OF_TOTAL'] = (
-            mdm_pvt_clients_current_dt.groupby(level='PROVIDER_NAME')['BALANCE_USDE'].shift(
-                periods=0) / filtered_total_bal_usde_fullvalue)
+        mdm_pvt_clients_current_dt.groupby(level='PROVIDER_NAME')['BALANCE_USDE'].shift(
+            periods=0) / filtered_total_bal_usde_fullvalue)
 
 mdm_pvt_clients.sort_values('BALANCE_DAY_CHANGE', inplace=True, ascending=False)
 mdm_pvt_clients_current_dt.sort_values('BALANCE_DAY_CHANGE', inplace=True, ascending=False)
 
-
-
 mdm_pvt_direct = pd.pivot_table(df_direct_bal_for_panel, values=['BALANCE_USDE', 'ESTIMATED_REVENUE'],
                                 index=['BALANCE_DT', 'REPORT_CATEGORY'], aggfunc=np.sum)
-
 
 provider_vol_pvt = pd.pivot_table(df_base_volume_for_panel, values=['TRADE_SUM_USDE'],
                                   index=['PROVIDER_NAME', 'TRADE_ORDER_TYPE'], aggfunc=np.sum)  # , margins= True)
@@ -731,7 +721,6 @@ provider_netActivity_pvt_head = provider_netActivity_pvt.head(10)
 provider_netActivity_pvt_tail = provider_netActivity_pvt.tail(10)
 provider_netActivity_pvt_head.index.names = ['Top 10 Providers']
 provider_netActivity_pvt_tail.index.names = ['Bottom 10 Providers']
-
 
 provider_netActivity_pvt_head = provider_netActivity_pvt_head.style.applymap(color_negative_red,
                                                                              subset=['Net Activity']).format(
@@ -827,7 +816,6 @@ df_provider_bc['ESTIMATED_REVENUE_DAY_CHANGE'] = df_provider_bc.groupby(level=['
                                                  df_provider_bc.groupby(level=['PROVIDER_NAME', 'RATE_TYPE'])[
                                                      'ESTIMATED_REVENUE'].shift(periods=1)
 
-
 df_provider_bc['BILLABLE_BPS'] = (df_provider_bc.groupby(level=['PROVIDER_NAME', 'RATE_TYPE'])[
                                       'ESTIMATED_REVENUE'].shift(periods=0) /
                                   df_provider_bc.groupby(level=['PROVIDER_NAME', 'RATE_TYPE'])['BALANCE_USDE'].shift(
@@ -852,7 +840,6 @@ df_ins_bc['ESTIMATED_REVENUE_DAY_CHANGE'] = df_ins_bc.groupby(level=['INV_INSTIT
                                             df_ins_bc.groupby(level=['INV_INSTITUTION_NAME', 'RATE_TYPE'])[
                                                 'ESTIMATED_REVENUE'].shift(periods=1)
 
-
 df_ins_bc['BILLABLE_BPS'] = (df_ins_bc.groupby(level=['INV_INSTITUTION_NAME', 'RATE_TYPE'])['ESTIMATED_REVENUE'].shift(
     periods=0) / df_ins_bc.groupby(level=['INV_INSTITUTION_NAME', 'RATE_TYPE'])['BALANCE_USDE'].shift(periods=0)) * 1000
 df_ins_bc.sort_values('BALANCE_DT', inplace=True, ascending=False)
@@ -860,8 +847,6 @@ df_ins_bc = df_ins_bc.fillna(0)
 
 ins_cats = df_master_for_panel['INV_INSTITUTION_NAME'].unique()
 unique_fps = df_master_for_panel['PROVIDER_NAME'].unique()
-
-
 
 unique_billing_cats = df_master_for_panel['RATE_TYPE'].unique()
 
@@ -883,7 +868,6 @@ df_whitelabel['ESTIMATED_REVENUE_DAY_CHANGE'] = df_whitelabel.groupby(level=['CB
                                                 df_whitelabel.groupby(level=['CB_DESCRIPTION', 'RATE_TYPE'])[
                                                     'ESTIMATED_REVENUE'].shift(periods=1)
 
-
 df_whitelabel['BILLABLE_BPS'] = (df_whitelabel.groupby(level=['CB_DESCRIPTION', 'RATE_TYPE'])[
                                      'ESTIMATED_REVENUE'].shift(periods=0) /
                                  df_whitelabel.groupby(level=['CB_DESCRIPTION', 'RATE_TYPE'])['BALANCE_USDE'].shift(
@@ -894,34 +878,24 @@ unique_whitelabels = df_master_for_panel['CB_DESCRIPTION'].unique()
 
 df_whitelabel = df_whitelabel.fillna(0)
 
-
-
 direct_7d_pct_difference = (mdm_pvt_direct.pct_change(periods=7))
 direct_7d_difference = mdm_pvt_direct.shift(periods=7) - mdm_pvt_direct
 pd.options.display.float_format = '{:.4f}'.format
 
-
-
-
 mdm_pvt_omni = pd.pivot_table(df_omni_bal_for_panel, values=['BALANCE_USDE', 'ESTIMATED_REVENUE'],
                               index=['BALANCE_DT', 'REPORT_CATEGORY'], aggfunc=np.sum)
-
 
 mdm_pvt_int = pd.pivot_table(df_int_for_panel, values=['BALANCE_USDE', 'ESTIMATED_REVENUE'],
                              index=['BALANCE_DT', 'REPORT_CATEGORY'], aggfunc=np.sum)
 
-
 mdm_pvt_sweep_affiliate = pd.pivot_table(df_sweep_affilitate_for_panel, values=['BALANCE_USDE', 'ESTIMATED_REVENUE'],
                                          index=['BALANCE_DT', 'REPORT_CATEGORY'], aggfunc=np.sum)
-
 
 mdm_pvt_sweep_ssga = pd.pivot_table(df_sweep_ssga_for_panel, values=['BALANCE_USDE', 'ESTIMATED_REVENUE'],
                                     index=['BALANCE_DT', 'REPORT_CATEGORY'], aggfunc=np.sum)
 
-
 mdm_pvt_3rd = pd.pivot_table(df_sweep_3rd_for_panel, values=['BALANCE_USDE', 'ESTIMATED_REVENUE'],
                              index=['BALANCE_DT', 'REPORT_CATEGORY'], aggfunc=np.sum)
-
 
 df_for_plot = mdm_pvt.reset_index()
 df_for_plot = df_for_plot.fillna(0)
@@ -987,8 +961,6 @@ bot5providers = preProviders.tail(5)
 top5providers.index.names = ['Greatest Provider Balance Increase']
 bot5providers.index.names = ['Greatest Provider Balance Decrease']
 
-
-
 df_for_ins_t5m = df_for_ins_5_movers.head(5)
 df_for_ins_t5m = df_for_ins_t5m.fillna(0)
 
@@ -997,8 +969,6 @@ df_for_b5m = df_for_b5m.fillna(0)
 df_for_b5m = pd.pivot_table(df_for_b5m, values=['BALANCE_USDE', 'BALANCE_DAY_CHANGE_PERCENT', 'BALANCE_DAY_CHANGE'],
                             index=['PROVIDER_NAME'], aggfunc=np.sum)
 df_for_b5m.sort_values('BALANCE_DAY_CHANGE', inplace=True, ascending=True)
-
-
 
 df_for_ins_b5m = df_for_ins_5_movers.loc[df_for_ins_5_movers['INV_INSTITUTION_NAME'] != 'TOTAL']
 df_for_ins_b5m.sort_values('BALANCE_DAY_CHANGE', inplace=True, ascending=True)
@@ -1092,25 +1062,17 @@ bot5providers = bot5providers.style.applymap(color_negative_red,
 ct_for_stkbar_bal = pd.crosstab(index=df_for_stkbar['BALANCE_DT'], columns=df_for_stkbar['FUND_CATEGORY'],
                                 values=df_for_stkbar['BALANCE_USDE'], aggfunc=np.sum)
 
-
 stkbar_src = ColumnDataSource(data=ct_for_stkbar_bal)
-
 
 unique_fund_categories = df_master_for_panel['FUND_CATEGORY'].unique()
 
-
 stkbar_cats = df_for_stkbar['FUND_CATEGORY'].unique()
-
-
 
 p3 = figure(x_range=(df_for_stkbar['BALANCE_DT'].unique()), sizing_mode='stretch_width', plot_height=400,
             title="Balance By Fund Category", toolbar_location=None, tools="", margin=(50, 5, 5, 5))
 colors = ["navy", "green", "red", "yellow", "orange", "teal", "purple"]
 renderers = p3.vbar_stack(stkbar_cats, x='BALANCE_DT', source=stkbar_src, width=0.6,
                           color=Spectral[9])  # , legend_label = legend)
-
-
-
 
 legend = Legend(items=[(x, [renderers[i]]) for i, x in enumerate(stkbar_cats)], location=(0, -30))
 p3.add_layout(legend, 'right')
@@ -1133,27 +1095,18 @@ hover.tooltips = [
     ('BALANCE_USDE', "@BALANCE_USDE{$ 0.00 a}"),
 ]
 
-
-
-
 ct_for_stkbar_bal2 = pd.crosstab(index=df_for_stkbar2['BALANCE_DT'], columns=df_for_stkbar2['CB_DESCRIPTION'],
                                  values=df_for_stkbar2['BALANCE_USDE'], aggfunc=np.sum)
 
 stkbar_src2 = ColumnDataSource(data=ct_for_stkbar_bal2)
 
-
-
 p4 = figure(x_range=(df_for_stkbar2['BALANCE_DT'].unique()), sizing_mode='stretch_width', plot_height=600,
             title="Balance By White Label", toolbar_location=None, tools="")
-
 
 unique_whitelabels_m_gl = df_for_stkbar2['CB_DESCRIPTION'].unique()
 
 renderers = p4.vbar_stack(unique_whitelabels_m_gl, x='BALANCE_DT', source=stkbar_src2, width=0.6,
                           color=Spectral[6])  # , legend_label = legend)
-
-
-
 
 legend = Legend(items=[(x, [renderers[i]]) for i, x in enumerate(unique_whitelabels_m_gl)], location=(0, -30))
 p4.add_layout(legend, 'right')
@@ -1176,8 +1129,6 @@ hover.tooltips = [
     ('RATE_TYPE', "@RATE_TYPE"),
     ('BALANCE_USDE', "@BALANCE_USDE{$ 0.00 a}"),
 ]
-
-
 
 source = ColumnDataSource(df_for_plot)
 
@@ -1204,7 +1155,6 @@ hover.tooltips = [
     ('BALANCE_USDE', "@BALANCE_USDE{$ 0.00 a}")
     # ('ESTIMATED_REVENUE', "@ESTIMATED_REVENUE{$ 0.00 a}")
 ]
-
 
 p.add_tools(hover)
 
@@ -1233,8 +1183,6 @@ def function_for_plot(ctcp):
     df_for_ssga = pvt_SSgASweep_plot.reset_index()
     splot = ColumnDataSource(df_for_ssga)
 
-
-
     if cat_choice_plot.value:
         df_for_plot = df_for_plot[df_for_plot.RATE_TYPE.isin(ctcp)]
 
@@ -1258,7 +1206,6 @@ def function_for_plot(ctcp):
     p.xaxis.major_label_orientation = math.pi / 2
     p.yaxis[0].formatter = NumeralTickFormatter(format="$ 0.00 a")
 
-
     p.toolbar.autohide = True
     hover = HoverTool()
     hover.tooltips = [
@@ -1267,10 +1214,7 @@ def function_for_plot(ctcp):
         # ('ESTIMATED_REVENUE', "@ESTIMATED_REVENUE{$ 0.00 a}")
     ]
 
-
-
     p.add_tools(hover)
-
 
     return p
 
@@ -1303,8 +1247,6 @@ def function_for_plot_balance(ctcp):
     df_for_ssga = pvt_SSgASweep_plot.reset_index()
     splot = ColumnDataSource(df_for_ssga)
 
-
-
     if cat_choice_plot.value:
         df_for_plot = df_for_plot[df_for_plot.REV_RATE_TYPE.isin(ctcp)]
 
@@ -1331,7 +1273,6 @@ def function_for_plot_balance(ctcp):
     p5 = p.line(x='BALANCE_DT', y='BALANCE_USDE', source=AffNSplot, line_width=1.5, color='blue')
 
     p8 = p.line(x='BALANCE_DT', y='BALANCE_USDE', source=splot, line_width=1.5, color='teal')
-
 
     p.title.text = 'Performance by Business Line'
 
@@ -1361,7 +1302,6 @@ def function_for_plot_balance(ctcp):
 
     p.add_tools(hover)
 
-
     return p
 
 
@@ -1390,7 +1330,6 @@ def function_for_plot_er(ctcp):
     df_for_ssga = pvt_SSgASweep_plot.reset_index()
     splot = ColumnDataSource(df_for_ssga)
 
-
     if cat_choice_plot.value:
         df_for_plot = df_for_plot[df_for_plot.REV_RATE_TYPE.isin(ctcp)]
 
@@ -1403,7 +1342,6 @@ def function_for_plot_er(ctcp):
     p5 = p.line(x='BALANCE_DT', y='BALANCE_USDE', source=AffNSplot, line_width=1.5, color='blue')
     p8 = p.line(x='BALANCE_DT', y='BALANCE_USDE', source=splot, line_width=1.5, color='teal')
 
-
     p.title.text = 'FC Estimated Revenue'
 
     p.yaxis.axis_label = 'Estimated Revenue USDE'
@@ -1412,7 +1350,6 @@ def function_for_plot_er(ctcp):
     p.yaxis[0].formatter = NumeralTickFormatter(format="$ 0.00 a")
 
     p.toolbar.autohide = True
-
 
     legend = Legend(items=[
 
@@ -1434,11 +1371,7 @@ def function_for_plot_er(ctcp):
 
     ]
 
-
-
     p.add_tools(hover)
-
-
 
     return p
 
@@ -1457,8 +1390,6 @@ data1 = dict(
 
 )
 source1 = ColumnDataSource(data1)
-
-
 
 data2 = dict(
     date=df_for_table2['BALANCE_DT'],
@@ -1570,7 +1501,6 @@ data_clients_header = dict(
 )
 source_clients_header = ColumnDataSource(data_clients_header)
 
-
 ins_top_5m = dict(
     date=df_for_ins_t5m['BALANCE_DT'],
 
@@ -1580,7 +1510,7 @@ ins_top_5m = dict(
     estimated_revenue_1_day_chg_pct=df_for_ins_t5m['ESTIMATED_REVENUE_DAY_CHANGE_PERCENT'],
     balance_usde_1_day_chg=df_for_ins_t5m['BALANCE_DAY_CHANGE'],
     estimated_revenue_1_day_chg=df_for_ins_t5m['ESTIMATED_REVENUE_DAY_CHANGE'],
-    
+
     ins=df_for_ins_t5m['INV_INSTITUTION_NAME'],
 )
 source_ins_top_5m = ColumnDataSource(ins_top_5m)
@@ -1594,7 +1524,7 @@ ins_bottom_5m = dict(
     estimated_revenue_1_day_chg_pct=df_for_ins_b5m['ESTIMATED_REVENUE_DAY_CHANGE_PERCENT'],
     balance_usde_1_day_chg=df_for_ins_b5m['BALANCE_DAY_CHANGE'],
     estimated_revenue_1_day_chg=df_for_ins_b5m['ESTIMATED_REVENUE_DAY_CHANGE'],
-    
+
     ins=df_for_ins_b5m['INV_INSTITUTION_NAME'],
 )
 source_ins_bottom_5m = ColumnDataSource(ins_bottom_5m)
@@ -1604,7 +1534,6 @@ df_for_dm_header = mdm_pvt_country_current_dt.reset_index()
 df_for_rc_header = mdm_pvt_current_dt.reset_index()
 df_for_ccy_header = mdm_pvt_currency_current_dt.reset_index()
 df_for_clients_header = mdm_pvt_clients_current_dt.reset_index()
-
 
 source2 = ColumnDataSource(data2)
 
@@ -1795,11 +1724,10 @@ columns = [
     TableColumn(field="revcat", title="Category"),
 
     TableColumn(field="b_usde", title="Balance USDE", formatter=bf),
-    
+
     TableColumn(field="balance_usde_1_day_chg_pct", title="Balance Change", formatter=rgb_formatter_pct),
 
     TableColumn(field="balance_usde_1_day_chg", title="Balance Change", formatter=rgb_formatter_ccy_mm),
-
 
 ]
 columns_hrc = [
@@ -1808,11 +1736,9 @@ columns_hrc = [
 
     TableColumn(field="b_usde", title="Balance USDE", formatter=bf),
 
-    
     TableColumn(field="balance_usde_1_day_chg_pct", title="Balance Change", formatter=rgb_formatter_pct),
 
     TableColumn(field="balance_usde_1_day_chg", title="Balance Change", formatter=rgb_formatter_ccy_mm),
-
 
 ]
 
@@ -1829,7 +1755,6 @@ columns2 = [
 
     TableColumn(field="balance_usde_1_day_chg", title="Balance Change", formatter=rgb_formatter_ccy_mm),
 
-
 ]
 
 columns_bcat = [
@@ -1838,25 +1763,22 @@ columns_bcat = [
     TableColumn(field="pct_of_total", title="Pct of Total Balance"),
     TableColumn(field="b_usde", title="Balance USDE", formatter=bf),
 
-
     TableColumn(field="balance_usde_1_day_chg_pct", title="Balance Change", formatter=rgb_formatter_pct),
 
     TableColumn(field="balance_usde_1_day_chg", title="Balance Change", formatter=rgb_formatter_ccy_mm),
 
-
 ]
 
 columns3 = [
-    
+
     TableColumn(field="ccy_name", title="Currency Name"),
     TableColumn(field="pct_of_total", title="Pct of Total Balance"),
-    
+
     TableColumn(field="b_usde", title="Balance USDE", formatter=bf),
-    
+
     TableColumn(field="balance_usde_1_day_chg_pct", title="Balance  Change", formatter=rgb_formatter_pct),
-    
+
     TableColumn(field="balance_usde_1_day_chg", title="Balance  Change", formatter=rgb_formatter_ccy_mm),
-    
 
 ]
 
@@ -1864,40 +1786,36 @@ columns4 = [
 
     TableColumn(field="clients", title="Provider Name"),
     TableColumn(field="pct_of_total", title="Pct of Total Balance"),
-    
+
     TableColumn(field="b_usde", title="Balance USDE", formatter=bf),
 
     TableColumn(field="balance_usde_1_day_chg_pct", title="Balance  Change", formatter=rgb_formatter_pct),
 
     TableColumn(field="balance_usde_1_day_chg", title="Balance  Change", formatter=rgb_formatter_ccy_mm),
-
 
 ]
 
 columns5 = [
-    
+
     TableColumn(field="clients", title="Provider Name"),
-    
+
     TableColumn(field="b_usde", title="Balance USDE", formatter=bf),
 
     TableColumn(field="balance_usde_1_day_chg_pct", title="Balance  Change", formatter=rgb_formatter_pct),
 
     TableColumn(field="balance_usde_1_day_chg", title="Balance  Change", formatter=rgb_formatter_ccy_mm),
-
 
 ]
 
 columns6 = [
 
     TableColumn(field="ins", title="Institution Name"),
-    
+
     TableColumn(field="b_usde", title="Balance USDE", formatter=bf),
 
-    
     TableColumn(field="balance_usde_1_day_chg_pct", title="Balance  Change", formatter=rgb_formatter_pct),
 
     TableColumn(field="balance_usde_1_day_chg", title="Balance  Change", formatter=rgb_formatter_ccy_mm),
-
 
 ]
 
@@ -1907,7 +1825,7 @@ columns_01 = [
 
     TableColumn(field="bcat", title="Category"),
     TableColumn(field="b_usde", title="Balance USDE", formatter=bf),
-    
+
     TableColumn(field="balance_usde_1_day_chg_pct", title="Balance Change", formatter=rgb_formatter_pct),
 
     TableColumn(field="balance_usde_1_day_chg", title="Balance Change", formatter=rgb_formatter_ccy_mm),
@@ -1921,7 +1839,7 @@ columns_02 = [
     TableColumn(field="bcat", title="Category"),
 
     TableColumn(field="b_usde", title="Balance USDE", formatter=bf),
-    
+
     TableColumn(field="balance_usde_1_day_chg_pct", title="Balance Change", formatter=rgb_formatter_pct),
 
     TableColumn(field="balance_usde_1_day_chg", title="Balance Change", formatter=rgb_formatter_ccy_mm),
@@ -1935,7 +1853,7 @@ columns_03 = [
     TableColumn(field="bcat", title="Category"),
 
     TableColumn(field="b_usde", title="Balance USDE", formatter=bf),
-    
+
     TableColumn(field="balance_usde_1_day_chg_pct", title="Balance Change", formatter=rgb_formatter_pct),
 
     TableColumn(field="balance_usde_1_day_chg", title="Balance Change", formatter=rgb_formatter_ccy_mm),
@@ -1959,9 +1877,6 @@ prov_bc_choice = pn.widgets.MultiChoice(name='Category Filter', options=list(uni
                                         css_classes=['panel-hover-tool2'])
 prbc = prov_bc_choice.value
 
-
-
-
 prov_ins_choice = pn.widgets.MultiChoice(name='Performance by Institution', options=list(ins_cats),
                                          margin=(2, 30, 20, 2), css_classes=['panel-hover-tool'])
 pri = prov_ins_choice.value
@@ -1973,8 +1888,6 @@ fpc = provider_choice.value
 whitelabel_choice = pn.widgets.MultiChoice(name='White Label Filter', options=list(unique_whitelabels),
                                            margin=(2, 20, 2, 2), css_classes=['panel-hover-tool'])
 wlc = whitelabel_choice.value
-
-
 
 data_table2 = DataTable(source=source2, columns=columns2, sizing_mode='stretch_width', height=100, index_position=None,
                         editable=True, reorderable=False)  # update view here
@@ -2005,7 +1918,6 @@ def category_callback(ctc):
     data_table = DataTable(source=source1, columns=columns, sizing_mode='stretch_width',
                            height=500, index_position=None, editable=True, reorderable=False)  # update view here
 
-
     return data_table
 
 
@@ -2030,7 +1942,7 @@ def client_rc_callback(prbc, fps):
         balance_usde_1_day_chg_pct=df_for_bc_callback['BALANCE_DAY_CHANGE_PERCENT'],
 
         balance_usde_1_day_chg=df_for_bc_callback['BALANCE_DAY_CHANGE'],
-        
+
     )
     source01 = ColumnDataSource(data_01)
 
@@ -2038,16 +1950,13 @@ def client_rc_callback(prbc, fps):
                               height=500, index_position=None, editable=True, reorderable=False,
                               margin=(2, 2, 20, 2))  # update view here
 
-
     return data_table_01
 
 
 #########################
 @pn.depends(prov_ins_choice)
 def client_inst_callback(pri):
-    
     df_inst_callback = df_ins_bc.reset_index()
-
 
     print("pre evaluating callback function for %s" % str(prov_ins_choice.value))
     if prov_ins_choice.value:
@@ -2074,15 +1983,13 @@ def client_inst_callback(pri):
 
         p01.extra_y_ranges = {"ESTIMATED_REVENUE": Range1d(150000, 350000)}
 
-
-
         p01.title.text = 'Institution Plot'
 
         p01.yaxis.axis_label = 'Balance USDE (Solid)'
 
         p01.xaxis.major_label_orientation = math.pi / 2
         p01.yaxis[0].formatter = NumeralTickFormatter(format="$ 0.00 a")
-        
+
         p01.toolbar.autohide = True
 
         hover = HoverTool()
@@ -2102,9 +2009,7 @@ def client_inst_callback(pri):
 
 @pn.depends(provider_choice)
 def client_prov_plot_callback(pri):
-
     df_prov_plot_callback = df_provider_bc.reset_index()
-
 
     print("pre evaluating prov callback function for %s" % str(provider_choice.value))
     if provider_choice.value:
@@ -2132,15 +2037,13 @@ def client_prov_plot_callback(pri):
 
         p02.extra_y_ranges = {"ESTIMATED_REVENUE": Range1d(150000, 350000)}
 
-
-
         p02.title.text = 'Provider Plot'
 
         p02.yaxis.axis_label = 'Balance USDE (Solid)'
 
         p02.xaxis.major_label_orientation = math.pi / 2
         p02.yaxis[0].formatter = NumeralTickFormatter(format="$ 0.00 a")
-        
+
         p02.toolbar.autohide = True
 
         hover = HoverTool()
@@ -2162,9 +2065,7 @@ def client_prov_plot_callback(pri):
 
 @pn.depends(whitelabel_choice)
 def client_cb_plot_callback(wlc):
-
     df_whitelabel_plot_callback = df_whitelabel.reset_index()
-
 
     print("pre evaluating whitelabel callback function for %s" % str(whitelabel_choice.value))
     if whitelabel_choice.value:
@@ -2193,15 +2094,12 @@ def client_cb_plot_callback(wlc):
 
         p03.extra_y_ranges = {"ESTIMATED_REVENUE": Range1d(150000, 350000)}
 
-
-
         p03.title.text = 'Provider Plot'
 
         p03.yaxis.axis_label = 'Balance USDE (Solid)'
 
         p03.xaxis.major_label_orientation = math.pi / 2
         p03.yaxis[0].formatter = NumeralTickFormatter(format="$ 0.00 a")
-
 
         p03.toolbar.autohide = True
 
@@ -2221,9 +2119,7 @@ def client_cb_plot_callback(wlc):
 ################################
 @pn.depends(prov_ins_choice, prov_bc_choice)
 def client_ins_callback(pri, prbc):
-
     df_for_ins_callback = df_ins_bc.reset_index()
-
 
     if prov_ins_choice.value:
         df_for_ins_callback = df_for_ins_callback[df_for_ins_callback.INV_INSTITUTION_NAME.isin(pri)]
@@ -2248,7 +2144,6 @@ def client_ins_callback(pri, prbc):
     data_table_02 = DataTable(source=source02, columns=columns_02, sizing_mode='stretch_width',
                               height=500, index_position=None, editable=True, reorderable=False,
                               margin=(2, 2, 20, 2))  # update view here
-
 
     return data_table_02
 
@@ -2282,9 +2177,7 @@ def whitelabel_callback(prbc, wlc):
                               height=500, index_position=None, editable=True, reorderable=False,
                               margin=20)  # update view here
 
-
     return data_table_03
-
 
 
 dm_header = DataTable(source=ColumnDataSource(data_country_header), columns=columns2, sizing_mode='stretch_width',
@@ -2297,13 +2190,10 @@ ccy_header = DataTable(source=ColumnDataSource(data_ccy_header), columns=columns
 clients_header = DataTable(source=ColumnDataSource(data_clients_header), columns=columns4, sizing_mode='stretch_width',
                            height=225, index_position=None, editable=True, reorderable=False)  # , view=view4)
 
-
 ins_t5m = DataTable(source=ColumnDataSource(ins_top_5m), columns=columns6, sizing_mode='stretch_width', height=200,
                     index_position=None, editable=True, reorderable=False)  # , view=view4)
 ins_b5m = DataTable(source=ColumnDataSource(ins_bottom_5m), columns=columns6, sizing_mode='stretch_width', height=200,
                     index_position=None, editable=True, reorderable=False)  # , view=view4)
-
-
 
 chg_slicer_header = pn.widgets.RadioButtonGroup(name='Category Analytics',
                                                 options=['1 Day', '7 Day', '30 Day', '60 Day', '90 Day'],
@@ -2318,8 +2208,6 @@ formatter = StringFormatter(font_style='bold')
 
 cube_columns = columns_hrc
 
-
-
 grouping = [
     GroupingInfo(getter='revcat', aggregators=[SumAggregator(field_='b_usde')], collapsed=False)
 ]
@@ -2328,51 +2216,43 @@ rc_cube = DataCube(source=source1, columns=cube_columns, grouping=grouping, targ
 
 mdm_pvt_alt.groupby(level='RATE_TYPE')['BALANCE_USDE'].pct_change(periods=1)
 
-
-
 show(column(p, p3, data_table2, data_table))
 
 filtered_total_bal_usde = (df_master_for_panel.loc[
                                df_master_for_panel['BALANCE_DT'] == latest_dt_str, 'BALANCE_USDE'].sum()) / 1000000000
 filtered_total_bal_chg = ((filtered_total_bal_usde - (df_master_for_panel.loc[df_master_for_panel[
                                                                                   'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) / (
-                                      df_master_for_panel.loc[df_master_for_panel[
-                                                                  'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) * 100
+                                  df_master_for_panel.loc[df_master_for_panel[
+                                                              'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) * 100
 filtered_total_bal_usde_str = str('{filtered_total_bal_usde:,.2f}').format(
     filtered_total_bal_usde=filtered_total_bal_usde)
 filtered_total_bal_chg_str = str('{filtered_total_bal_chg:,.2f}').format(filtered_total_bal_chg=filtered_total_bal_chg)
 filtered_total_bal_chg_usd_str = str('{filtered_total_bal_chg_usd:,.2f}').format(
     filtered_total_bal_chg_usd=filtered_total_bal_chg_usd)
 
-
-
 total_portal = df_portal.loc[df_portal['BALANCE_DT'] == latest_dt_str, 'BALANCE_USDE'].sum() / 1000000000
 total_portal_chg = ((total_portal - (
-            df_portal.loc[df_portal['BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) / (
-                                df_portal.loc[df_portal[
-                                                  'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) * 100
+        df_portal.loc[df_portal['BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) / (
+                            df_portal.loc[df_portal[
+                                              'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) * 100
 
 total_sweep = df_sweep.loc[df_sweep['BALANCE_DT'] == latest_dt_str, 'BALANCE_USDE'].sum() / 1000000000
 total_sweep_chg = ((total_sweep - (
-            df_sweep.loc[df_sweep['BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) / (
-                               df_sweep.loc[df_sweep[
-                                                'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) * 100
-
+        df_sweep.loc[df_sweep['BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) / (
+                           df_sweep.loc[df_sweep[
+                                            'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) * 100
 
 total_whitelabel = df_for_stkbar2.loc[df_for_stkbar2['BALANCE_DT'] == latest_dt_str, 'BALANCE_USDE'].sum() / 1000000000
 total_whitelabel_chg = ((total_whitelabel - (df_for_stkbar2.loc[df_for_stkbar2[
                                                                     'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) / (
-                                    df_for_stkbar2.loc[df_for_stkbar2[
-                                                           'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) * 100
-
+                                df_for_stkbar2.loc[df_for_stkbar2[
+                                                       'BALANCE_DT'] == latest_dt_m1_str, 'BALANCE_USDE'].sum() / 1000000000)) * 100
 
 pvt_mtd = pd.pivot_table(df_master_for_panel, values=['ESTIMATED_REVENUE'], index=['BALANCE_DT'],
                          aggfunc=np.sum).reset_index()
 
 pvt_mtd['BALANCE_DT'] = pd.to_datetime(pvt_mtd['BALANCE_DT'])
 pvt_mtd.set_index('BALANCE_DT')
-
-
 
 current_month = datetime.now().month
 current_mtd_sum = pvt_mtd.loc[pvt_mtd[
@@ -2389,8 +2269,6 @@ def prior_month():
 
 prior_month_revenue = pvt_mtd.loc[pvt_mtd[
                                       'BALANCE_DT'].dt.month == prior_month(), 'ESTIMATED_REVENUE'].sum() / 1000000  ##this is the prior month's estimated revenue calculation
-
-
 
 
 def color_choice_total():
@@ -2456,6 +2334,13 @@ def border_col_change(value):
         return '2px solid black'
 
 
+def color_choice(value):
+    if (value > 0):
+        return ('green')
+    elif (value < 0):
+        return ('red')
+    else:
+        return ('black')
 
 
 css = '''
@@ -2591,9 +2476,6 @@ html_pane = pn.pane.HTML("""
                                 'border-radius': '5px', 'font-size': '12px', 'text-align': 'center', 'width': '300px',
                                 'color': color_choice_total()}, width_policy='max')
 
-
-
-
 html_pane2 = pn.pane.HTML("""
 <h2>Estimated Revenue</h2>
 
@@ -2648,8 +2530,6 @@ html_pane6 = pn.pane.HTML("""
 """.format(prior_month_revenue=prior_month_revenue), style={'background-color': 'e1e7e3', 'border': '2px solid black',
                                                             'border-radius': '5px', 'font-size': '12px',
                                                             'text-align': 'center', 'width': '300px'})
-
-
 
 html_pane8 = pn.pane.HTML("""
 <h2>White Label Balance</h2>
@@ -2761,9 +2641,6 @@ html_panef = pn.pane.HTML("""
                           style={'background-color': '#0a2f5d', 'color': 'white', 'border': '2px solid black',
                                  'border-radius': '5px', 'font-size': '16px', 'height': '200px'}, width_policy='max')
 
-
-
-
 # titles
 PRC = "Performance by Report Category"
 PD = "Performance by Domicile"
@@ -2782,18 +2659,133 @@ b5text = "Top 5 Losses"
 provider_col = pn.Column(provider_choice, client_rc_callback, margin=(5, 5, 5, 5))
 ins_col = pn.Column(prov_ins_choice, client_ins_callback, margin=(5, 5, 5, 5))
 
+print(latest_dt_str)
+width = GetSystemMetrics(0)
+if width >= 1920:
+    gspec = pn.GridSpec(sizing_mode='stretch_both')
+    gspec[0, :4] = pn.Row(html_paneh, margin=5, max_height=175)
+    gspec[1, :4] = pn.Row(html_pane, html_pane3, html_pane4, html_pane8, html_pane9, html_pane10, html_pane11,
+                          margin=(5, 5, 5, 5), max_height=120)
+    gspec[2, 0:2] = pn.Row(pn.Column(PBC, billing_cat_multiindex, p3), margin=5, max_width=1200,
+                           css_classes=['panel-df'])
+    gspec[2, 2:4] = pn.Row(pn.Column(function_for_plot, function_for_plot_balance), margin=5)
+    gspec[3, 0:2] = pn.Row(top10institutions, sizing_mode='stretch_width', margin=5, css_classes=['panel-df'])
+    gspec[3, 2:4] = pn.Row(top10providers, margin=5, css_classes=['panel-df'])
+    gspec[4, :4] = pn.Row(html_panef, max_height=100, margin=(75, 5, 5, 5))
+else:
+    gspec = pn.GridSpec(sizing_mode='stretch_both')
+    gspec[0, :4] = pn.Row(html_paneh, margin=5, max_height=175)
+    gspec[1, :4] = pn.Row(html_pane, html_pane3, html_pane4, margin=(5, 5, 5, 5), max_height=120, align='center')
+    gspec[2, :4] = pn.Row(html_pane8, html_pane9, html_pane10, html_pane11,
+                          margin=(5, 5, 5, 5), max_height=120, align='center')
+    gspec[3, :4] = pn.Row(pn.Column(PBC, billing_cat_multiindex, p3), margin=5, max_width=1200,
+                          css_classes=['panel-df'])
+    gspec[4, :4] = pn.Row(pn.Column(function_for_plot, function_for_plot_balance), margin=5)
+    gspec[5, :4] = pn.Row(top10institutions, sizing_mode='stretch_width', margin=5, css_classes=['panel-df'])
+    gspec[6, :4] = pn.Row(top10providers, margin=5, css_classes=['panel-df'])
+    gspec[7, :4] = pn.Row(html_panef, max_height=100, margin=(75, 5, 5, 5))
+
+html_pane_pdf = pn.pane.HTML("""
 
 
+<h2>Total Balance</h2>
 
-gspec = pn.GridSpec(sizing_mode='stretch_both')
-gspec[0, :4] = pn.Row(html_paneh, margin=5, max_height=175)
-gspec[1, :4] = pn.Row(html_pane, html_pane3, html_pane4, html_pane8, html_pane9, html_pane10, html_pane11,
-                      margin=(5, 5, 5, 5), max_height=120)
-gspec[2, 0:2] = pn.Row(pn.Column(PBC, billing_cat_multiindex, p3), margin=5, max_width=1200, css_classes=['panel-df'])
-gspec[2, 2:4] = pn.Row(pn.Column(function_for_plot, function_for_plot_balance), margin=5)
-gspec[3, 0:2] = pn.Row(top10institutions, sizing_mode='stretch_width', margin=5, css_classes=['panel-df'])
-gspec[3, 2:4] = pn.Row(top10providers, margin=5, css_classes=['panel-df'])
-gspec[4, :4] = pn.Row(html_panef, max_height=100, margin=(75, 5, 5, 5))
+
+<code>
+
+<h1>${filtered_total_bal_usde:,.2f}B | {filtered_total_bal_chg:.2f}%</h1>
+""".format(filtered_total_bal_usde=filtered_total_bal_usde, filtered_total_bal_chg=filtered_total_bal_chg),
+                             style={'background-color': 'e1e7e3', 'border': border_col_change(filtered_total_bal_chg),
+                                    'border-radius': '5px', 'font-size': '8px', 'text-align': 'center',
+                                    'width': '170px', 'height': '85px',
+                                    'color': color_choice(filtered_total_bal_chg)}, width_policy='max')
+
+html_pane3_pdf = pn.pane.HTML("""
+<h2>Portal Balance </h2>
+
+<code>
+
+<h1>${total_portal:,.2f}B | {total_portal_chg:.2f}%</h1>
+""".format(total_portal=total_portal, total_portal_chg=total_portal_chg),
+                              style={'background-color': 'e1e7e3', 'border': border_col_change(total_portal_chg),
+                                     'border-radius': '5px', 'font-size': '8px', 'text-align': 'center',
+                                     'width': '170px', 'height': '85px',
+                                     'color': color_choice(total_portal_chg)}, width_policy='max')
+
+html_pane4_pdf = pn.pane.HTML("""
+<h2>Sweep Balance</h2>
+
+<code>
+   <h1>${total_sweep:,.2f}B | {total_sweep_chg:.2f}%</h1>
+""".format(total_sweep=total_sweep, total_sweep_chg=total_sweep_chg),
+                              style={'background-color': 'e1e7e3', 'border': border_col_change(total_sweep_chg),
+                                     'border-radius': '5px', 'font-size': '8px', 'text-align': 'center',
+                                     'width': '170px', 'height': '85px',
+                                     'color': color_choice(total_sweep_chg)})
+
+html_pane8_pdf = pn.pane.HTML("""
+<h2>White Label Balance</h2>
+
+<code>
+   <h1>${total_whitelabel:,.2f}B | {total_whitelabel_chg:.2f}%</h1>
+""".format(total_whitelabel=total_whitelabel, total_whitelabel_chg=total_whitelabel_chg),
+                              style={'background-color': 'e1e7e3', 'border': border_col_change(total_whitelabel_chg),
+                                     'border-radius': '5px', 'font-size': '8px', 'text-align': 'center',
+                                     'width': '170px', 'height': '85px',
+                                     'color': color_choice(total_whitelabel_chg)})
+
+html_pane9_pdf = pn.pane.HTML("""
+<h2>Net Activity</h2>
+
+<code>
+   <h1>${net_activity:,.2f}M</h1>
+""".format(net_activity=net_activity), style={'background-color': 'e1e7e3', 'border': border_col_change(net_activity),
+                                              'border-radius': '5px', 'font-size': '8px', 'text-align': 'center',
+                                              'width': '150px', 'height': '85px', 'color': color_choice(net_activity)})
+
+html_pane10_pdf = pn.pane.HTML("""
+<h2>Total Activity</h2>
+
+<code>
+   <h1>${total_activity:,.2f}B</h1>
+""".format(total_activity=total_activity),
+                               style={'background-color': 'e1e7e3', 'border': border_col_change(total_activity),
+                                      'border-radius': '5px', 'font-size': '8px', 'text-align': 'center',
+                                      'width': '150px', 'height': '85px', 'color': color_choice(total_activity)})
+
+html_pane11_pdf = pn.pane.HTML("""
+<h2>Projected Balance</h2>
+
+<code>
+   <h1>${projected_balance:,.2f}B | {projected_balance_chg:.2f}%</h1>
+""".format(projected_balance=projected_balance, projected_balance_chg=projected_balance_chg),
+                               style={'background-color': 'e1e7e3', 'border': border_col_change(projected_balance_chg),
+                                      'border-radius': '5px', 'font-size': '8px', 'text-align': 'center',
+                                      'width': '170px', 'height': '85px', 'color': color_choice(projected_balance_chg)})
+
+gspec_pdf = pn.GridSpec(sizing_mode='stretch_both')
+gspec_pdf[0, :4] = pn.Row(html_pane_pdf, html_pane3_pdf, html_pane4_pdf, align='center')
+gspec_pdf[1, :4] = pn.Row(html_pane8_pdf, html_pane9_pdf, html_pane10_pdf, html_pane11_pdf, align='center')
+gspec_pdf[2, :4] = pn.Row(pn.Column(PBC, billing_cat_multiindex), margin=(-50, 5, 5, 5), max_width=1200,
+                          css_classes=['panel-df'], align='center')
+gspec_pdf[3, :4] = pn.Row(pn.Column(p3), margin=(100, 5, 5, 5), max_width=1200, css_classes=['panel-df'],
+                          align='center')
+gspec_pdf[4, :4] = pn.Row(function_for_plot, margin=(190, 5, 5, 5), css_classes=['panel-df'], align='center')
+gspec_pdf[5, :4] = pn.Row(function_for_plot_balance, margin=(100, 5, 5, 5), css_classes=['panel-df'], align='center')
+gspec_pdf[6, :4] = pn.Row(top10institutions, margin=(140, 5, 5, 5), css_classes=['panel-df'], align='center')
+gspec_pdf[7, :4] = pn.Row(top10providers, margin=(250, 5, 5, 5), css_classes=['panel-df'], align='center')
+
+#
+# gspec_pdf[2, :4] = pn.Row(function_for_plot, margin=(5, 5, 5, 5), align='center')
+# gspec_pdf[3, :4] = pn.Row(pn.Column(top5providers,bot5providers), margin=(80, 5, 5, 5), css_classes=['panel-df'], align='center')
+# gspec_pdf[4, :4] = pn.Row(pn.Column(PBC,billing_cat_multiindex_rev), margin=(150, 5, 5, 5), max_width=1200, css_classes=['panel-df2'], align='center') #bcat_header
+# gspec_pdf[5, :4] = pn.Row(pn.Column(p3), margin=(170, 5, 5, 5), align='center')
+# gspec_pdf[6, :4] = pn.Row(function_for_plot_balance, margin=(200, 5, 5, 5), align='center') #pn.Spacer(background='orange',height=50)
+# gspec_pdf[7, :4] = pn.Row(function_for_plot_er, margin=(80, 5, 5, 5), align='center') #pn.Spacer(background='orange',height=50)
+# gspec_pdf[8, :4] = pn.Row(top10institutions, margin=(210, 20, 20, 20), css_classes=['panel-df'], align='center')
+# gspec_pdf[9, :4] = pn.Row(top10providers, margin=(340, 20, 20, 20), css_classes=['panel-df'], align='center')
+#
+
 
 gspec2 = pn.GridSpec(sizing_mode='stretch_both')
 gspec2[0, :4] = pn.Row(html_paneh2, margin=5, max_height=175)
@@ -2830,40 +2822,47 @@ tabs = pn.Tabs(
     ('Appendix', gspec3)
 ).servable()
 
+gspec.save('rev_dashboard.html', resources=INLINE, embed=True)
+gspec_pdf.save('rev_dashboard_pdf.html', resources=INLINE, embed=True)
+subprocess.call(["python.exe", "converter.py"], shell=True)
 
+fromaddr = "marianobaci46@gmail.com"
+toaddr = "marianobaci22@gmail.com"
+msg = MIMEMultipart()
+msg['From'] = fromaddr
+msg['To'] = toaddr
+msg['Subject'] = "Fund Connect Volume Dashboard " + latest_dt.strftime("%m-%d-%y")
 
-tabs.save(app_home + 'FC_Dashboard.html', resources=INLINE, embed=True)  ## how to save as an html file
+body = "Attached is the Fund Connect Performance Dashboard as of " + latest_dt.strftime(
+    "%m-%d-%y") + ":" + "\n$" + filtered_total_bal_usde_str + "B is the current balance and this is a change of " + filtered_total_bal_chg_str + "%" + " and $" + filtered_total_bal_chg_usd_str + "B." + "\n" + "\nAll values are expressed in USD. (Please open with Chrome for optimal performance.) \nWeb: http://btreves01-vdi.pc.ny2.eexchange.com:5006/panel_process"
 
-parser = argparse.ArgumentParser()
+msg.attach(MIMEText(body, 'plain'))
 
-parser.add_argument('-e', '--email', action='store_true',
-                    help="send email")
+filename = "out.pdf"
+attachment = open("./out.pdf", "rb")
+p = MIMEBase('application', 'octet-stream')
+p.set_payload((attachment).read())
+encoders.encode_base64(p)
+p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+msg.attach(p)
 
-args = parser.parse_args()
+filename1 = "rev_dashboard.html"
+attachment1 = open("./rev_dashboard.html", "rb")
+p1 = MIMEBase('application', 'octet-stream')
+p1.set_payload((attachment1).read())
+encoders.encode_base64(p1)
+p1.add_header('Content-Disposition', "attachment; filename= %s" % filename1)
+msg.attach(p1)
 
-if args.email:
-    me = "fundconnect@globallink.com"  # testing set
-    to = ""
-    body = ("Attached is the Fund Connect Performance Dashboard as of " + latest_dt.strftime("%m-%d-%y") + ":" + "\n"
-                                                                                                                 "$" + filtered_total_bal_usde_str + "B is the current balance and this is a change of " + filtered_total_bal_chg_str + "%" + " and $" + filtered_total_bal_chg_usd_str + "B." + "\n" + "\n"
-                                                                                                                                                                                                                                                                                                        "All values are expressed in USD. (Please open with Chrome for optimal performance.) \n" +
-            "Web: http://btreves01-vdi.pc.ny2.eexchange.com:5006/panel_process")
+s = smtplib.SMTP('smtp.gmail.com', 587)
 
-    rcpt = to.split(",")
-    msg = MIMEMultipart()
-    msg['Subject'] = "Fund Connect Volume Dashboard " + latest_dt.strftime("%m-%d-%y")
-    msg['From'] = me
-    msg['To'] = to
+s.starttls()
 
-    body = MIMEText(body)  # convert the body to a MIME compatible string`
-    msg.attach(body)  # attach it to your main message
-    part = MIMEBase('application', "octet-stream")
-    part.set_payload(open(app_home + 'FC_Dashboard.html', "rb").read())
-    encoders.encode_base64(part)
-    part.add_header('Content-Disposition', 'attachment; filename=' + 'Volume_Dashboard.html')
-    msg.attach(part)
-    server = smtplib.SMTP("mail.ny2.eexchange.com")
-    server.sendmail(me, rcpt, msg.as_string())
-    print("Completed")
+s.login(fromaddr, "mycgaihtnmlmenwi")
 
+text = msg.as_string()
+
+s.sendmail(fromaddr, toaddr, text)
+
+s.quit()
 
