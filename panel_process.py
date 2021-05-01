@@ -2821,10 +2821,11 @@ tabs = pn.Tabs(
     ('White Label', gspec4),
     ('Appendix', gspec3)
 ).servable()
+param1 = ['FC_Dashboard_pdf.html', 'FC_Dashboard.pdf']
 
-gspec.save('rev_dashboard.html', resources=INLINE, embed=True)
-gspec_pdf.save('rev_dashboard_pdf.html', resources=INLINE, embed=True)
-subprocess.call(["python.exe", "converter.py"], shell=True)
+gspec.save('FC_Dashboard.html', resources=INLINE, embed=True)
+gspec_pdf.save('FC_Dashboard_pdf.html', resources=INLINE, embed=True)
+subprocess.call(["python.exe", "converter.py"] + param1, shell=False)
 
 fromaddr = "marianobaci46@gmail.com"
 toaddr = "marianobaci22@gmail.com"
@@ -2838,16 +2839,16 @@ body = "Attached is the Fund Connect Performance Dashboard as of " + latest_dt.s
 
 msg.attach(MIMEText(body, 'plain'))
 
-filename = "out.pdf"
-attachment = open("./out.pdf", "rb")
+filename = "FC_Dashboard.pdf"
+attachment = open("./FC_Dashboard.pdf", "rb")
 p = MIMEBase('application', 'octet-stream')
 p.set_payload((attachment).read())
 encoders.encode_base64(p)
 p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
 msg.attach(p)
 
-filename1 = "rev_dashboard.html"
-attachment1 = open("./rev_dashboard.html", "rb")
+filename1 = "FC_Dashboard.html"
+attachment1 = open("./FC_Dashboard.html", "rb")
 p1 = MIMEBase('application', 'octet-stream')
 p1.set_payload((attachment1).read())
 encoders.encode_base64(p1)

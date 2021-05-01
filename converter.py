@@ -1,4 +1,4 @@
-import pdfgen
+import pdfgen, sys
 options = {
     'scale': 1.5,
     'format': 'A4',
@@ -11,5 +11,7 @@ options = {
         'left': '0',
     },
 }
+print(sys.argv[1])
+print(sys.argv[2])
 
-pdfgen.sync.from_file('rev_dashboard_pdf.html', 'out.pdf', options=options)
+pdfgen.sync.from_file(sys.argv[1], sys.argv[2], options=options)

@@ -2407,7 +2407,8 @@ gspec4[4, :4] = pn.Row(html_panef, max_height=100, margin=5)
 
 gspec.save('rev_dashboard.html', resources=INLINE, embed=True)
 gspec_pdf.save('rev_dashboard_pdf.html', resources=INLINE, embed=True)
-subprocess.call(["python.exe", "converter.py"], shell=True)
+subprocess.call(["python.exe", "converter.py", 'rev_dashboard_pdf.html', 'rev_dashboard.pdf'], shell=True)
+
 
 rev_dashboard = pn.Tabs(
     ('Home', gspec),
@@ -2428,8 +2429,8 @@ body = "Attached is the Fund Connect Performance Dashboard as of " + latest_dt.s
 
 msg.attach(MIMEText(body, 'plain'))
 
-filename = "out.pdf"
-attachment = open("./out.pdf", "rb")
+filename = "rev_dashboard.pdf"
+attachment = open("./rev_dashboard.pdf", "rb")
 p = MIMEBase('application', 'octet-stream')
 p.set_payload((attachment).read())
 encoders.encode_base64(p)
