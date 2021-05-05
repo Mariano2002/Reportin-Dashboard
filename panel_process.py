@@ -2474,7 +2474,7 @@ html_pane = pn.pane.HTML("""
 """.format(filtered_total_bal_usde=filtered_total_bal_usde, filtered_total_bal_chg=filtered_total_bal_chg),
                          style={'background-color': 'e1e7e3', 'border': border_col_change(filtered_total_bal_chg),
                                 'border-radius': '5px', 'font-size': '12px', 'text-align': 'center', 'width': '300px',
-                                'color': color_choice_total()}, width_policy='max')
+                                'color': color_choice(filtered_total_bal_chg)}, width_policy='max')
 
 html_pane2 = pn.pane.HTML("""
 <h2>Estimated Revenue</h2>
@@ -2485,7 +2485,7 @@ html_pane2 = pn.pane.HTML("""
 """.format(filtered_total_er=filtered_total_er, filtered_total_er_chg=filtered_total_er_chg),
                           style={'background-color': 'e1e7e3', 'border': border_col_change(filtered_total_er_chg),
                                  'border-radius': '5px', 'font-size': '12px', 'text-align': 'center', 'width': '300px',
-                                 'color': color_choice_er()}, width_policy='max')
+                                 'color': color_choice(filtered_total_er_chg)}, width_policy='max')
 
 html_pane3 = pn.pane.HTML("""
 <h2>Portal Balance </h2>
@@ -2498,7 +2498,7 @@ html_pane3 = pn.pane.HTML("""
 """.format(total_portal=total_portal, total_portal_chg=total_portal_chg),
                           style={'background-color': 'e1e7e3', 'border': border_col_change(total_portal_chg),
                                  'border-radius': '5px', 'font-size': '12px', 'text-align': 'center', 'width': '300px',
-                                 'color': color_choice_portal()}, width_policy='max')
+                                 'color': color_choice(total_portal_chg)}, width_policy='max')
 
 html_pane4 = pn.pane.HTML("""
 <h2>Sweep Balance</h2>
@@ -2509,7 +2509,7 @@ html_pane4 = pn.pane.HTML("""
 """.format(total_sweep=total_sweep, total_sweep_chg=total_sweep_chg),
                           style={'background-color': 'e1e7e3', 'border': border_col_change(total_sweep_chg),
                                  'border-radius': '5px', 'font-size': '12px', 'text-align': 'center', 'width': '300px',
-                                 'color': color_choice_sweep()})
+                                 'color': color_choice(total_sweep_chg)})
 
 html_pane5 = pn.pane.HTML("""
 <h2>MTD Est. Revenue</h2>
@@ -2517,9 +2517,10 @@ html_pane5 = pn.pane.HTML("""
 <code>
    <h1>${current_mtd_sum:.2f}M</h1>
 
-""".format(current_mtd_sum=current_mtd_sum), style={'background-color': 'e1e7e3', 'border': '2px solid black',
-                                                    'border-radius': '5px', 'font-size': '12px', 'text-align': 'center',
-                                                    'width': '300px'})
+""".format(current_mtd_sum=current_mtd_sum),
+                          style={'background-color': 'e1e7e3', 'border': border_col_change(current_mtd_sum),
+                                 'border-radius': '5px', 'font-size': '12px', 'text-align': 'center',
+                                 'width': '300px', 'color': color_choice(current_mtd_sum)})
 
 html_pane6 = pn.pane.HTML("""
 <h2>Prior Month Est. Revenue</h2>
@@ -2527,9 +2528,10 @@ html_pane6 = pn.pane.HTML("""
 <code>
    <h1>${prior_month_revenue:.2f}M</h1>
 
-""".format(prior_month_revenue=prior_month_revenue), style={'background-color': 'e1e7e3', 'border': '2px solid black',
-                                                            'border-radius': '5px', 'font-size': '12px',
-                                                            'text-align': 'center', 'width': '300px'})
+""".format(prior_month_revenue=prior_month_revenue),
+                          style={'background-color': 'e1e7e3', 'border': border_col_change(prior_month_revenue),
+                                 'border-radius': '5px', 'font-size': '12px',
+                                 'text-align': 'center', 'width': '300px', 'color': color_choice(prior_month_revenue)})
 
 html_pane8 = pn.pane.HTML("""
 <h2>White Label Balance</h2>
@@ -2540,7 +2542,7 @@ html_pane8 = pn.pane.HTML("""
 """.format(total_whitelabel=total_whitelabel, total_whitelabel_chg=total_whitelabel_chg),
                           style={'background-color': 'e1e7e3', 'border': border_col_change(total_whitelabel_chg),
                                  'border-radius': '5px', 'font-size': '12px', 'text-align': 'center', 'width': '300px',
-                                 'color': color_choice_whitelabel()})
+                                 'color': color_choice(total_whitelabel_chg)})
 
 html_pane9 = pn.pane.HTML("""
 <h2>Net Activity</h2>
@@ -2548,9 +2550,9 @@ html_pane9 = pn.pane.HTML("""
 <code>
    <h1>${net_activity:,.2f}M</h1>
 
-""".format(net_activity=net_activity), style={'background-color': 'e1e7e3', 'border': '2px solid black',
+""".format(net_activity=net_activity), style={'background-color': 'e1e7e3', 'border': border_col_change(net_activity),
                                               'border-radius': '5px', 'font-size': '12px', 'text-align': 'center',
-                                              'width': '175px'})
+                                              'width': '175px', 'color': color_choice(net_activity)})
 
 html_pane10 = pn.pane.HTML("""
 <h2>Total Activity</h2>
@@ -2558,9 +2560,10 @@ html_pane10 = pn.pane.HTML("""
 <code>
    <h1>${total_activity:,.2f}B</h1>
 
-""".format(total_activity=total_activity), style={'background-color': 'e1e7e3', 'border': '2px solid black',
-                                                  'border-radius': '5px', 'font-size': '12px', 'text-align': 'center',
-                                                  'width': '175px'})
+""".format(total_activity=total_activity),
+                           style={'background-color': 'e1e7e3', 'border': border_col_change(total_activity),
+                                  'border-radius': '5px', 'font-size': '12px', 'text-align': 'center',
+                                  'width': '175px', 'color': color_choice(total_activity)})
 
 html_pane11 = pn.pane.HTML("""
 <h2>Projected Balance</h2>
@@ -2569,9 +2572,9 @@ html_pane11 = pn.pane.HTML("""
    <h1>${projected_balance:,.2f}B | {projected_balance_chg:.2f}%</h1>
 
 """.format(projected_balance=projected_balance, projected_balance_chg=projected_balance_chg),
-                           style={'background-color': 'e1e7e3', 'border': '2px solid black',
+                           style={'background-color': 'e1e7e3', 'border': border_col_change(projected_balance_chg),
                                   'border-radius': '5px', 'font-size': '12px', 'text-align': 'center',
-                                  'width': '250px'})
+                                  'width': '250px', 'color': color_choice(projected_balance_chg)})
 
 html_paneh = pn.pane.HTML("""
 
