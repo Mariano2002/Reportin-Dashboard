@@ -128,10 +128,56 @@ def add():
 
 def scraper():
     global input_data, scraped_data
+
+    csvf1.config(state='disable')
+    date1.config(state='disable')
+    pdf.config(state='disable')
+    name.config(state='disable')
+    fname.config(state='disable')
+    typec.config(state='disable')
+    add_btn1.config(state='disable')
+    code1.config(state="disable")
+    upload_btn.config(state="disable")
+    download_btn.config(state="disable")
+    download_btn2.config(state="disable")
+    csvf2.config(state="disable")
+    run.config(state="disable")
+    csvf3.config(state="disable")
+    date2.config(state="disable")
+    run.config(bg="orange")
+    run.config(text='Scraping')
+
     try:
         get_data()
     except:
-        pass
+        if input_data == []:
+            csvf1.config(state='normal')
+            date1.config(state='normal')
+            pdf.config(state='normal')
+            name.config(state='normal')
+            fname.config(state='normal')
+            typec.config(state='normal')
+            add_btn1.config(state='normal')
+            code1.config(state="normal")
+            upload_btn.config(state="normal")
+            download_btn.config(state="normal")
+            download_btn2.config(state="normal")
+            csvf2.config(state="normal")
+            compare.config(state="normal")
+            run.config(state="normal")
+            csvf3.config(state="normal")
+            date2.config(state="normal")
+            run.config(bg="LightBlue1")
+            run.config(text='Run Scraper')
+            tkMessageBox.showerror("Invalid data", "Please complete at least one pair of data!")
+            return
+
+
+
+
+
+
+
     whitelist_l = []
     with open(whitelist, encoding='utf-8-sig', newline='') as f:
         reader = csv.reader((line.replace('\0', '') for line in f), delimiter=",")
@@ -231,27 +277,6 @@ def scraper():
 
 
 def start():
-    if input_data != []:
-        csvf1.config(state='disable')
-        date1.config(state='disable')
-        pdf.config(state='disable')
-        name.config(state='disable')
-        fname.config(state='disable')
-        typec.config(state='disable')
-        add_btn1.config(state='disable')
-        code1.config(state="disable")
-        upload_btn.config(state="disable")
-        download_btn.config(state="disable")
-        download_btn2.config(state="disable")
-        csvf2.config(state="disable")
-        run.config(state="disable")
-        csvf3.config(state="disable")
-        date2.config(state="disable")
-        run.config(bg="orange")
-        run.config(text='Scraping')
-    else:
-        tkMessageBox.showerror("Invalid data", "Please complete at least one pair of data!")
-        return
     thread = Thread(target=scraper)
     thread.start()
 
@@ -722,8 +747,32 @@ if __name__ == '__main__':
     download_btn.config(bg="LightBlue1")
 
 
+
     def download2():
-        pass
+        f = open('scraper_file.csv', 'w', newline='', encoding='UTF-8')
+        writer = csv.writer(f)
+        writer.writerow(['Fund Provider', 'Fund Name', 'ISIN', 'Cusip', 'Document Type', 'Link', 'Working', 'Document kind'])
+
+        for i in scraped_data:
+            for typ in types:
+                if i['type'] == 'isin':
+                    writer.writerow([i['provider'], i['name'], i['code'], '', i['document'], i['link'], i['working'], typ])
+                elif i['type'] == 'cusip':
+                    writer.writerow([i['provider'], i['name'], '', i['code'], i['document'], i['link'], i['working'], typ])
+        f.close()
+
+        f = filedialog.asksaveasfile(title='Name a file', initialdir='C:\\', filetypes=(("Comma Delimited", "*.csv*"),),
+                                     defaultextension='.csv')
+        if f is None:
+            return
+
+        if f.name[-4:] == ".csv":
+            original = r'./scraper_file.csv'
+            target = f.name
+
+            shutil.copyfile(original, target)
+            tkMessageBox.showinfo(title="Downloaded", message="The Excel file is downloaded.", )
+
 
     download_btn2 = Button(mainframe3, text='Download Scraper File', width=20, command=download2)
     download_btn2.place(x=480, y=130)
