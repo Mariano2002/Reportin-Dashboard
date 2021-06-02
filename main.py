@@ -181,6 +181,7 @@ def scraper():
     whitelist_l = []
     with open(whitelist, encoding='utf-8-sig', newline='') as f:
         reader = csv.reader((line.replace('\0', '') for line in f), delimiter=",")
+        next(reader)
         for nr, row in enumerate(reader):
             if row[2] == '1':
                 whitelist_l.append(row[1])
@@ -216,8 +217,8 @@ def scraper():
                 for linki in whitelist_l:
                     if linki in link:
                         conti = 1
-                        continue
-                if conti == 1:
+                        break
+                if conti == 0:
                     continue
                 driver.get(link)
 
@@ -284,7 +285,7 @@ if __name__ == '__main__':
 
     input_data = []
     scraped_data = []
-    whitelist = "whitelist.txt"
+    whitelist = "whitelist.csv"
     types = [
         "1. Fact Sheet",
         "2. Holdings Report",
@@ -301,7 +302,7 @@ if __name__ == '__main__':
     root.geometry("%dx%d+0+0" % (1400, 900))
     root.resizable(1, 1)
     root.config(bg="#3399ff")
-
+    root.resizable(False, False)
 
     title = Frame(root, bd=1, relief=SOLID)
     title.pack(side=TOP, pady=10)
@@ -326,8 +327,11 @@ if __name__ == '__main__':
     def UploadAction1(event=None):
         global filename1
         filename1 = filedialog.askopenfilename()
-        if filename1 != "" and filename1[-4:] == ".csv":
-            csvf1.config(text=filename1.split("/")[-1])
+        if filename1 != "":
+            if filename1[-4:] == ".csv":
+                csvf1.config(text=filename1.split("/")[-1])
+            else:
+                tkMessageBox.showerror("Invalid data", "Please select a CSV file!")
         else:
             csvf1.config(text="Select file")
             filename1 = None
@@ -403,15 +407,15 @@ if __name__ == '__main__':
         provider = NAME.get()
         fund_name = FNAME.get()
         type = TYPEC.get()
-        CODE.set("")
-        NAME.set("")
-        FNAME.set("")
         TYPEC.set(code_types[0])
         if code_v != "" and fund_name != "" and provider != "":
             input_data.append({'provider':provider, "code":code_v, 'name':fund_name, 'type':type})
         else:
-            tkMessageBox.showerror("Invalid data", "Please complete at least one pair of data!")
+            tkMessageBox.showerror("Invalid data", "Please complete all the fields to add a fund!")
             return
+        CODE.set("")
+        NAME.set("")
+        FNAME.set("")
 
     add_btn1 = Button(mainframe1, text='Add Fund', width=10, command=add1)
     add_btn1.grid(row=9, column=1, sticky=W)
@@ -443,8 +447,12 @@ if __name__ == '__main__':
     left_button1.config(bg="#3399ff")
     left_button1.place(x=630, y=725)
 
-
-
+    canvas = Canvas(mainframe1, width=100, height=10, bg="#3399ff", highlightthickness=0)
+    canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="gray55")
+    canvas.create_rectangle(12, 0, 22, 10, outline="#3399ff", fill="black")
+    canvas.create_rectangle(24, 0, 34, 10, outline="#3399ff", fill="black")
+    canvas.create_rectangle(36, 0, 46, 10, outline="#3399ff", fill="black")
+    canvas.place(x= 640, y=700)
 ###############################################################################################################################################################################################################################
 
     ################### VARIABLE #####################
@@ -454,7 +462,7 @@ if __name__ == '__main__':
     # mainframe2.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,10), pady=(0,0))
 
     lbl = Label(mainframe2, bg='#3399ff', text="Check Fund Provider Website Whitelist", font=('arial', 10), bd=11)
-    lbl.place(x=205, y=0)
+    lbl.place(x=-5, y=0)
 
 
     def DisplayData1():
@@ -462,10 +470,14 @@ if __name__ == '__main__':
         color_number = True
         checked_or_not = True
         fetch = []
-        with open(whitelist, encoding='utf-8-sig', newline='') as f:
-            reader = csv.reader((line.replace('\0','') for line in f), delimiter=",")
-            for nr,row in enumerate(reader):
-                fetch.append(row)
+        try:
+            with open(whitelist, encoding='utf-8-sig', newline='') as f:
+                reader = csv.reader((line.replace('\0','') for line in f), delimiter=",")
+                next(reader)
+                for nr,row in enumerate(reader):
+                    fetch.append(row)
+        except:
+            pass
         for data in fetch:
             if data[-1] == "0":
                 checked_or_not = False
@@ -624,11 +636,14 @@ if __name__ == '__main__':
     def UploadAction2(event=None):
         global whitelist
         whitelist = filedialog.askopenfilename()
-        if whitelist != "" and whitelist[-4:]==".txt":
-            tree1.delete(*tree1.get_children())
-            DisplayData1()
+        if whitelist != "":
+            if whitelist[-4:]==".txt" or whitelist[-4:]==".csv":
+                tree1.delete(*tree1.get_children())
+                DisplayData1()
+            else:
+                tkMessageBox.showerror("Invalid data", "Please select a CSV or TXT file!")
         else:
-            whitelist = "whitelist.txt"
+            whitelist = "whitelist.csv"
         save1()
 
     upload_btn2 = Button(mainframe2, text='Upload Whitelist', width=20, command=UploadAction2)
@@ -644,7 +659,7 @@ if __name__ == '__main__':
             valuesPE = tree1.item(child)["values"]
             if(valuesPE[1]==""):
                 do = 0
-                tkMessageBox.showerror("Error", "Please enter Full Name!")
+                tkMessageBox.showerror("Error", "Please enter the website link!")
                 break
         if(do == 1):
             if color_number == True:
@@ -663,7 +678,8 @@ if __name__ == '__main__':
 
 
     def save1():
-        file = open("whitelist.txt", 'w')
+        file = open("whitelist.csv", 'w')
+        file.write(",".join(['#Fund Provider', 'Website Link', 'Checkmark'])+"\n")
         for child in tree1.get_children():
             lista = tree1.item(child)["values"][:3]
             for nr,i in enumerate(lista):
@@ -692,6 +708,12 @@ if __name__ == '__main__':
     left_button2.config(bg="#3399ff")
     left_button2.place(x=630, y=725)
 
+    canvas = Canvas(mainframe2, width=100, height=10, bg="#3399ff", highlightthickness=0)
+    canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
+    canvas.create_rectangle(12, 0, 22, 10, outline="#3399ff", fill="gray55")
+    canvas.create_rectangle(24, 0, 34, 10, outline="#3399ff", fill="black")
+    canvas.create_rectangle(36, 0, 46, 10, outline="#3399ff", fill="black")
+    canvas.place(x= 640, y=700)
 
     mainframe2.pack_forget()
 
@@ -715,9 +737,12 @@ if __name__ == '__main__':
     def UploadAction3(event=None):
         global whitelist
         whitelist = filedialog.askopenfilename()
-        if whitelist != "" and whitelist[-4:]==".txt":
-            tree1.delete(*tree1.get_children())
-            DisplayData1()
+        if whitelist != "":
+            if whitelist[-4:]==".txt" or whitelist[-4:]==".csv":
+                tree1.delete(*tree1.get_children())
+                DisplayData1()
+            else:
+                tkMessageBox.showerror("Invalid data", "Please select a CSV or TXT file!")
         else:
             whitelist = "whitelist.txt"
         save1()
@@ -729,17 +754,26 @@ if __name__ == '__main__':
 
     def download1():
 
-        f = filedialog.asksaveasfile(title='Name a file', initialdir='C:\\', filetypes=(("Text File", "*.txt*"),),
-                                     defaultextension='.txt')
+        f = filedialog.asksaveasfile(title='Name a file', initialdir='C:\\', filetypes=(("CSV File", "*.csv*"),("Text File", "*.txt*"),),
+                                     defaultextension='.csv')
         if f is None:
             return
 
-        if f.name[-4:] == ".txt":
+        if f.name[-4:] == ".csv":
+            original = './whitelist.csv'
+            target = f.name
+
+            shutil.copyfile(original, target)
+            tkMessageBox.showinfo(title="Downloaded", message="The Whitelist file is downloaded.", )
+
+
+        elif f.name[-4:] == ".txt":
             original = './whitelist.txt'
             target = f.name
 
             shutil.copyfile(original, target)
             tkMessageBox.showinfo(title="Downloaded", message="The Whitelist file is downloaded.", )
+
 
 
     download_btn = Button(mainframe3, text='Download Whitelist', width=20, command=download1)
@@ -784,6 +818,7 @@ if __name__ == '__main__':
         if filename4 != "":
             csvf1.config(text=filename4.split("/")[-1])
         else:
+            # tkMessageBox.showerror("Invalid data", "Please select a CSV or TXT file!")
             csvf1.config(text="Select file")
             filename4 = None
 
@@ -807,7 +842,10 @@ if __name__ == '__main__':
         global filename5
         filename5 = filedialog.askopenfilename()
         if filename5 != "":
-            csvf3.config(text=filename5.split("/")[-1])
+            if filename5[-4:] == ".csv":
+                csvf3.config(text=filename5.split("/")[-1])
+            else:
+                tkMessageBox.showerror("Invalid data", "Please select a CSV file!")
         else:
             csvf3.config(text="Select file")
             filename5 = None
@@ -869,6 +907,13 @@ if __name__ == '__main__':
     left_button3.config(bg="#3399ff")
     left_button3.place(x=630, y=725)
 
+    canvas = Canvas(mainframe3, width=100, height=10, bg="#3399ff", highlightthickness=0)
+    canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
+    canvas.create_rectangle(12, 0, 22, 10, outline="#3399ff", fill="black")
+    canvas.create_rectangle(24, 0, 34, 10, outline="#3399ff", fill="gray55")
+    canvas.create_rectangle(36, 0, 46, 10, outline="#3399ff", fill="black")
+    canvas.place(x= 640, y=700)
+
 ###############################################################################################################################################################################################################################
 
 
@@ -880,10 +925,9 @@ if __name__ == '__main__':
     def DisplayData2():
         global color_number, checked_or_not2
 
-
+        tree2.delete(*tree2.get_children())
         color_number = True
         checked_or_not2 = True
-        fetch = []
 
         for i in scraped_data:
             checked_or_not2 = i['checked']
@@ -900,12 +944,14 @@ if __name__ == '__main__':
             elif i['type'] == 'isin':
                 data = [i['provider'], i['name'], i['code'], '', i['document'], i['link'], i['working'], '', i['old_link'], i['checked']]
 
-            if color_number == True:
-                tree2.insert('', 'end', values=(data), tags=('gr',),)
-                color_number = False
-            else:
-                tree2.insert('', 'end', values=(data),)
-                color_number = True
+            for typ in types:
+                data[7] = typ
+                if color_number == True:
+                    tree2.insert('', 'end', values=(data), tags=('gr',),)
+                    color_number = False
+                else:
+                    tree2.insert('', 'end', values=(data),)
+                    color_number = True
 
 
     def fixed_map(option):
@@ -1073,14 +1119,13 @@ if __name__ == '__main__':
         writer.writerow(['Fund Provider', 'Fund Name', 'ISIN', 'Cusip', 'Document Type', 'Link', 'Working', 'Document kind'])
 
         for child in tree2.get_children():
-            lista = tree2.item(child)["values"][:7]
+            lista = tree2.item(child)["values"][:8]
             print(tree2.item(child)["values"])
             for nr,i in enumerate(lista):
                 lista[nr] = str(i)
             if tree2.item(child)["values"][9] == 0 or lista[5] == "":
                 lista[5] = tree2.item(child)["values"][8]
-            for typ in types:
-                writer.writerow(lista+[typ])
+            writer.writerow(lista)
         f.close()
 
 
@@ -1125,12 +1170,11 @@ if __name__ == '__main__':
     left_button4.config(bg="#3399ff")
     left_button4.place(x=660, y=725)
 
-
-
-
-
-
-
-
+    canvas = Canvas(mainframe4, width=100, height=10, bg="#3399ff", highlightthickness=0)
+    canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
+    canvas.create_rectangle(12, 0, 22, 10, outline="#3399ff", fill="black")
+    canvas.create_rectangle(24, 0, 34, 10, outline="#3399ff", fill="black")
+    canvas.create_rectangle(36, 0, 46, 10, outline="#3399ff", fill="gray55")
+    canvas.place(x=670, y=700)
 
     root.mainloop()
