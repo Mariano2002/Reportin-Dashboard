@@ -16,6 +16,7 @@ import tkinter.messagebox as tkMessageBox
 import shutil
 from PIL import Image, ImageTk
 import tkinter.ttk as ttk
+import math
 
 def switch12():
 
@@ -23,13 +24,10 @@ def switch12():
 
     mainframe2.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,10), pady=(0,0))
 
-
 def switch21():
     mainframe2.pack_forget()
 
     mainframe1.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,10), pady=(0,0))
-
-
 
 def switch23():
 
@@ -37,15 +35,11 @@ def switch23():
 
     mainframe3.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,10), pady=(0,0))
 
-
-
 def switch32():
 
     mainframe3.pack_forget()
 
     mainframe2.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,10), pady=(0,0))
-
-
 
 def switch34():
 
@@ -53,16 +47,11 @@ def switch34():
 
     mainframe4.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(10,10), pady=(0,0))
 
-
-
 def switch43():
 
     mainframe4.pack_forget()
 
     mainframe3.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,10), pady=(0,0))
-
-
-
 
 def get_data():
     filename = filename1
@@ -74,40 +63,45 @@ def get_data():
             try:
                 if datetime.strptime('/'.join(x.zfill(2) for x in row[66].split('/')), '%m/%d/%Y') >= datetime.strptime('/'.join(x.zfill(2) for x in last_date.split('/')), '%m/%d/%Y'):
                     if row[6] == "ISIN":
-                        input_data.append({'provider':row[0], "code":row[8], 'name':row[3], 'type':'ISIN'})
+                        input_data.append({'provider':row[0], "code":row[8], 'name':row[3], 'type':'isin'})
                     elif row[6] == "CUSIP":
-                        input_data.append({'provider':row[0], "code":row[7], 'name':row[3], 'type':'Cusip'})
+                        input_data.append({'provider':row[0], "code":row[7], 'name':row[3], 'type':'cusip'})
                     else:
                         if row[7] != "":
-                            input_data.append({'provider':row[0], "code":row[7], 'name':row[3], 'type':'ISIN'})
+                            input_data.append({'provider':row[0], "code":row[7], 'name':row[3], 'type':'isin'})
                         elif row[8] != "":
-                            input_data.append({'provider':row[0], "code":row[8], 'name':row[3], 'type':'Cusip'})
+                            input_data.append({'provider':row[0], "code":row[8], 'name':row[3], 'type':'cusip'})
             except:
                 pass
 
-
-
 def get_data_comp():
     filename = filename5
-    last_date = DATE2.get()
     print(scraped_data)
     with open(filename, encoding='utf-8-sig', newline='') as f:
         reader = csv.reader((line.replace('\0','') for line in f), delimiter=",")
         next(reader)
         for nr,row in enumerate(reader):
             try:
-                if datetime.strptime('/'.join(x.zfill(2) for x in row[7].split('/')), '%m/%d/%Y') >= datetime.strptime('/'.join(x.zfill(2) for x in last_date.split('/')), '%m/%d/%Y'):
-                    if row[3] != "":
-                        for u in scraped_data:
-                            if row[3].lower() == u['code'].lower():
-                                u['old_link'] = row[5]
-                    if row[2] != "":
+                if row[3] != "":
+                    for u in scraped_data:
+                        if row[3].lower() == u['code'].lower():
+                            u['old_link'] = row[5]
+                            if u['link'] == u['old_link']:
+                                u['same'] = 'YES'
+                            else:
+                                u['same'] = 'NO'
+
+                if row[2] != "":
                         for u in scraped_data:
                             if row[2].lower() == u['code'].lower():
                                 u['old_link'] = row[5]
+                                if u['link'] == u['old_link']:
+                                    u['same'] = 'YES'
+                                else:
+                                    u['same'] = 'NO'
+
             except:
                 pass
-
 
 def add():
     code_v = CODE.get()
@@ -124,8 +118,6 @@ def add():
         tkMessageBox.showerror("Invalid data", "Please complete at least one pair of data!")
         return
 
-
-
 def scraper():
     global input_data, scraped_data
 
@@ -140,10 +132,9 @@ def scraper():
     upload_btn.config(state="disable")
     download_btn.config(state="disable")
     download_btn2.config(state="disable")
-    csvf2.config(state="disable")
+    upload_btn3.config(state="disable")
     run.config(state="disable")
     csvf3.config(state="disable")
-    date2.config(state="disable")
     run.config(bg="orange")
     run.config(text='Scraping')
 
@@ -162,11 +153,10 @@ def scraper():
             upload_btn.config(state="normal")
             download_btn.config(state="normal")
             download_btn2.config(state="normal")
-            csvf2.config(state="normal")
+            upload_btn3.config(state="normal")
             compare.config(state="normal")
             run.config(state="normal")
             csvf3.config(state="normal")
-            date2.config(state="normal")
             run.config(bg="LightBlue1")
             run.config(text='Run Scraper')
             tkMessageBox.showerror("Invalid data", "Please complete at least one pair of data!")
@@ -238,10 +228,10 @@ def scraper():
                 document = "link"
         if "This site can’t be reached" in driver.page_source:
             working = "0"
-        if i['type'] == 'ISIN':
-            scraped_data.append({"provider":i['provider'], "name":i['name'], "code":i['code'], "type":"isin", "document":document, "link":link_m, "working":working, "old_link":"", 'checked':"1"})
-        elif i['type'] == 'Cusip':
-            scraped_data.append({"provider":i['provider'], "name":i['name'], "code":i['code'], "type":"cusip", "document":document, "link":link_m, "working":working, "old_link":"", 'checked':"1"})
+        if i['type'] == 'isin':
+            scraped_data.append({"provider":i['provider'], "name":i['name'], "code":i['code'], "type":"isin", "document":document, "link":link_m, "working":working, "old_link":"", 'same':"", 'checked':"1"})
+        elif i['type'] == 'cusip':
+            scraped_data.append({"provider":i['provider'], "name":i['name'], "code":i['code'], "type":"cusip", "document":document, "link":link_m, "working":working, "old_link":"", 'same':"", 'checked':"1"})
         time.sleep(2)
 
     # code.config(state='normal')
@@ -267,15 +257,12 @@ def scraper():
     upload_btn.config(state="normal")
     download_btn.config(state="normal")
     download_btn2.config(state="normal")
-    csvf2.config(state="normal")
+    upload_btn3.config(state="normal")
     compare.config(state="normal")
     run.config(state="normal")
     csvf3.config(state="normal")
-    date2.config(state="normal")
     run.config(bg="LightBlue1")
     run.config(text='Run Scraper')
-
-
 
 def start():
     thread = Thread(target=scraper)
@@ -286,23 +273,14 @@ if __name__ == '__main__':
     input_data = []
     scraped_data = []
     whitelist = "whitelist.csv"
-    types = [
-        "1. Fact Sheet",
-        "2. Holdings Report",
-        "3. Daily Holdings Report",
-        "4. Prospectus",
-        "5. Annual Report",
-        "6. Semi-Annual Report",
-        "7. Statement of Addition Information"
-    ]
-
 
     root = Tk()
     root.title("Fund Document Scraper \\ Menu")
-    root.geometry("%dx%d+0+0" % (1400, 900))
+    root.geometry("%dx%d+0+0" % (1400, 700)) #CHANGE duhet 900
     root.resizable(1, 1)
     root.config(bg="#3399ff")
     root.resizable(False, False)
+    root.state('zoomed') #CHANGE hiqe
 
     title = Frame(root, bd=1, relief=SOLID)
     title.pack(side=TOP, pady=10)
@@ -438,14 +416,14 @@ if __name__ == '__main__':
     photo11 = ImageTk.PhotoImage(image11)
     right_button1 = Button(mainframe1, image=photo11, border=0, command=switch12)
     right_button1.config(bg="#3399ff")
-    right_button1.place(x=670, y=725)
+    right_button1.place(x=670, y=525) #CHANGE duhet 725
 
     image21 = Image.open("left.png")
     image21 = image21.resize((25, 25), Image.ANTIALIAS)
     photo21 = ImageTk.PhotoImage(image21)
     left_button1 = Button(mainframe1, image=photo21, border=0)
     left_button1.config(bg="#3399ff")
-    left_button1.place(x=630, y=725)
+    left_button1.place(x=630, y=525) #CHANGE duhet 725
 
     canvas = Canvas(mainframe1, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="gray55")
@@ -513,8 +491,11 @@ if __name__ == '__main__':
             return
         item = tree1.selection()[0]
         item_text = tree1.item(item, "values")[int(column.replace("#",""))-1]
+        print(item)
+        tree1.see(item)
         entryedit = Text(mainframe2)
         entryedit.insert("1.0", item_text)
+
         entryedit.place(x=x_long, y=75+tree1.index(item)*30, width=n_width, height=30)
         entryedit.focus()
 
@@ -549,11 +530,11 @@ if __name__ == '__main__':
             kw.setdefault('show', 'headings')  # hide column #0
             ttk.Treeview.__init__(self, master, **kw)
             # create checheckbox images
-            self._im_checked = PhotoImage('checked',
-                                             data=b'GIF89a\x0e\x00\x0e\x00\xf0\x00\x00\x00\x00\x00\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x0e\x00\x0e\x00\x00\x02#\x04\x82\xa9v\xc8\xef\xdc\x83k\x9ap\xe5\xc4\x99S\x96l^\x83qZ\xd7\x8d$\xa8\xae\x99\x15Zl#\xd3\xa9"\x15\x00;',
+
+            # image12 = Image.open("right.png")
+            self._im_checked = PhotoImage('checked',file="tick.png",
                                              master=self)
-            self._im_unchecked = PhotoImage('unchecked',
-                                               data=b'GIF89a\x0e\x00\x0e\x00\xf0\x00\x00\x00\x00\x00\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x0e\x00\x0e\x00\x00\x02\x1e\x04\x82\xa9v\xc1\xdf"|i\xc2j\x19\xce\x06q\xed|\xd2\xe7\x89%yZ^J\x85\x8d\xb2\x00\x05\x00;',
+            self._im_unchecked = PhotoImage('unchecked',file="untick.png",
                                                master=self)
             style = ttk.Style(self)
             style.configure("cb.Treeview.Heading", font=(None, 13))
@@ -655,12 +636,6 @@ if __name__ == '__main__':
     def new_row():
         global color_number
         do = 1
-        for child in tree1.get_children():
-            valuesPE = tree1.item(child)["values"]
-            if(valuesPE[1]==""):
-                do = 0
-                tkMessageBox.showerror("Error", "Please enter the website link!")
-                break
         if(do == 1):
             if color_number == True:
                 tree1.insert('', len(tree1.get_children()), values=("", "", "", ""), tags=('gr',))
@@ -673,7 +648,7 @@ if __name__ == '__main__':
             tree1.selection_set(child_id)
 
     add_btn2 = Button(mainframe2, text='Add Website', width=20, command=new_row)
-    add_btn2.place(x=1180, y=685)
+    add_btn2.place(x=1180, y=485) #CHANGE duhet 625
     add_btn2.config(bg="LightBlue1")
 
 
@@ -688,7 +663,7 @@ if __name__ == '__main__':
         file.close()
 
     save_btn = Button(mainframe2, text='Save Change', width=20, command=save1)
-    save_btn.place(x=1180, y=725)
+    save_btn.place(x=1180, y=525) #CHANGE duhet 725
     save_btn.config(bg="LightBlue1")
 
 
@@ -699,14 +674,14 @@ if __name__ == '__main__':
     photo12 = ImageTk.PhotoImage(image12)
     right_button2 = Button(mainframe2, image=photo12, border=0, command=switch23)
     right_button2.config(bg="#3399ff")
-    right_button2.place(x=670, y=725)
+    right_button2.place(x=670, y=525) #CHANGE duhet 725
 
     image22 = Image.open("left.png")
     image22 = image22.resize((25, 25), Image.ANTIALIAS)
     photo22 = ImageTk.PhotoImage(image22)
     left_button2 = Button(mainframe2, image=photo22, border=0, command=switch21)
     left_button2.config(bg="#3399ff")
-    left_button2.place(x=630, y=725)
+    left_button2.place(x=630, y=525) #CHANGE duhet 725
 
     canvas = Canvas(mainframe2, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
@@ -723,7 +698,6 @@ if __name__ == '__main__':
     # mainframe3.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,10), pady=(0,0))
 
     ##################### VARIABLE #####################
-    DATE2 = StringVar()
     filename3 = None
     filename4 = None
     filename5 = None
@@ -748,7 +722,7 @@ if __name__ == '__main__':
         save1()
 
     upload_btn = Button(mainframe3, text='Upload Whitelist', width=20, command=UploadAction3)
-    upload_btn.place(x=480, y=50)
+    upload_btn.place(x=570, y=50)
     upload_btn.config(bg="LightBlue1")
 
 
@@ -777,23 +751,12 @@ if __name__ == '__main__':
 
 
     download_btn = Button(mainframe3, text='Download Whitelist', width=20, command=download1)
-    download_btn.place(x=480, y=90)
+    download_btn.place(x=570, y=90)
     download_btn.config(bg="LightBlue1")
 
 
 
     def download2():
-        f = open('scraper_file.csv', 'w', newline='', encoding='UTF-8')
-        writer = csv.writer(f)
-        writer.writerow(['Fund Provider', 'Fund Name', 'ISIN', 'Cusip', 'Document Type', 'Link', 'Working', 'Document kind'])
-
-        for i in scraped_data:
-            for typ in types:
-                if i['type'] == 'isin':
-                    writer.writerow([i['provider'], i['name'], i['code'], '', i['document'], i['link'], i['working'], typ])
-                elif i['type'] == 'cusip':
-                    writer.writerow([i['provider'], i['name'], '', i['code'], i['document'], i['link'], i['working'], typ])
-        f.close()
 
         f = filedialog.asksaveasfile(title='Name a file', initialdir='C:\\', filetypes=(("Comma Delimited", "*.csv*"),),
                                      defaultextension='.csv')
@@ -801,32 +764,75 @@ if __name__ == '__main__':
             return
 
         if f.name[-4:] == ".csv":
-            original = r'./scraper_file.csv'
-            target = f.name
 
-            shutil.copyfile(original, target)
+            f = open(f.name, 'w', newline='', encoding='UTF-8')
+            writer = csv.writer(f)
+            writer.writerow(['Fund Provider', 'Fund Name', 'ISIN', 'Cusip', 'Document Type', 'Link', 'Working', 'Document kind'])
+
+            for i in scraped_data:
+                if i['type'] == 'isin':
+                    types = [
+                        "1. Fact Sheet",
+                        "2. Holdings Report",
+                        "3. Daily Holdings Report",
+                        "4. Prospectus",
+                        "5. Annual Report",
+                        "6. Semi-Annual Report",
+                        "7. Statement of Addition Information",
+                        "8. KIID"]
+                    for typ in types:
+                        writer.writerow([i['provider'], i['name'], i['code'], '', i['document'], i['link'], i['working'], typ])
+                elif i['type'] == 'cusip':
+                    types = [
+                        "1. Fact Sheet",
+                        "2. Holdings Report",
+                        "3. Daily Holdings Report",
+                        "4. Prospectus",
+                        "5. Annual Report",
+                        "6. Semi-Annual Report",
+                        "7. Statement of Addition Information"]
+
+                    for typ in types:
+                        writer.writerow([i['provider'], i['name'], '', i['code'], i['document'], i['link'], i['working'], typ])
+            f.close()
             tkMessageBox.showinfo(title="Downloaded", message="The Excel file is downloaded.", )
 
 
     download_btn2 = Button(mainframe3, text='Download Scraper File', width=20, command=download2)
-    download_btn2.place(x=480, y=130)
+    download_btn2.place(x=570, y=130)
     download_btn2.config(bg="LightBlue1")
 
-    def UploadAction4(event=None):
-        global filename4
-        filename4 = filedialog.askopenfilename()
-        if filename4 != "":
-            csvf1.config(text=filename4.split("/")[-1])
+
+    def UploadAction6(event=None):
+        global scraped_data
+        global filename5
+        filename5 = filedialog.askopenfilename()
+        if filename5 != "":
+            if filename5[-4:] == ".csv":
+                scraped_data = []
+                with open(filename5, encoding='utf-8-sig', newline='') as f:
+                    reader = csv.reader((line.replace('\0', '') for line in f), delimiter=",")
+                    next(reader)
+                    for nr, row in enumerate(reader):
+                        try:
+                            if row[7] == "1. Fact Sheet":
+                                if row[3] != "":
+                                    scraped_data.append({"provider":row[0], "name":row[1], "code":row[3], "type":"cusip", "document":row[4], "link":row[5], "working":row[6], "old_link":"", 'same':'', 'checked':"1"})
+                                if row[2] != "":
+                                    scraped_data.append({"provider":row[0], "name":row[1], "code":row[2], "type":"isin", "document":row[4], "link":row[5], "working":row[6], "old_link":"", 'same':'', 'checked':"1"})
+                        except:
+                            pass
+
+                compare.config(state="normal")
+            else:
+                tkMessageBox.showerror("Invalid data", "Please select a CSV file!")
         else:
-            # tkMessageBox.showerror("Invalid data", "Please select a CSV or TXT file!")
-            csvf1.config(text="Select file")
-            filename4 = None
+            csvf3.config(text="Select file")
+            filename5 = None
 
-
-    csvf2 = Button(mainframe3, text='Select file', width=38, command=UploadAction4)
-    csvf2.place(x=665, y=50)
-
-
+    upload_btn3 = Button(mainframe3, text='Upload Scraper File', width=20, command=UploadAction6)
+    upload_btn3.place(x=570, y=170)
+    upload_btn3.config(bg="LightBlue1")
 
 
     run = Button(mainframe3, text="Run Scraper", width=20, height=2, bg="#009ACD", command=start)
@@ -857,36 +863,13 @@ if __name__ == '__main__':
 
 
 
-
-    def handle_focus_in(_):
-        if DATE2.get() == "MM/DD/YYYY" or DATE2.get() == "Example: 12/31/2021":
-            date2.delete(0, END)
-            date2.config(fg='black')
-
-    def handle_focus_out(_):
-        if DATE2.get() == "":
-            date2.delete(0, END)
-            date2.config(fg='grey')
-            date2.insert(0, "Example: 12/31/2021")
-
-
-
-    lbl_date2 = Label(mainframe3, bg='#3399ff', text="Effective Date:", font=('arial', 12), bd=10)
-    lbl_date2.place(x=500, y=360)
-    date2 = Entry(mainframe3, bg='white', textvariable=DATE2, font=('arial', 12), width=30, fg='grey')
-    date2.place(x=665, y=365)
-    date2.insert(0, "MM/DD/YYYY")
-    date2.bind("<FocusIn>", handle_focus_in)
-    date2.bind("<FocusOut>", handle_focus_out)
-
-
     def compare():
         get_data_comp()
         DisplayData2()
 
     compare = Button(mainframe3, text="Compare", width=20, height=2, bg="#009ACD", command=compare)
     compare.config(bg="LightBlue1")
-    compare.place(x=665, y=430)
+    compare.place(x=665, y=400)
     compare.config(state="disabled")
 
     lbl = Label(mainframe3, bg='#3399ff', text="Click to next view after compare ran", font=('arial', 10), bd=10)
@@ -898,14 +881,14 @@ if __name__ == '__main__':
     photo13 = ImageTk.PhotoImage(image13)
     right_button3 = Button(mainframe3, image=photo13, border=0, command=switch34)
     right_button3.config(bg="#3399ff")
-    right_button3.place(x=670, y=725)
+    right_button3.place(x=670, y=525) #CHANGE duhet 725
 
     image23 = Image.open("left.png")
     image23 = image23.resize((25, 25), Image.ANTIALIAS)
     photo23 = ImageTk.PhotoImage(image23)
     left_button3 = Button(mainframe3, image=photo23, border=0, command=switch32)
     left_button3.config(bg="#3399ff")
-    left_button3.place(x=630, y=725)
+    left_button3.place(x=630, y=525) #CHANGE duhet 725
 
     canvas = Canvas(mainframe3, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
@@ -939,10 +922,31 @@ if __name__ == '__main__':
                 checked_or_not2 = False
 
             data = []
+
             if i['type'] == 'cusip':
-                data = [i['provider'], i['name'], '', i['code'], i['document'], i['link'], i['working'], '', i['old_link'], i['checked']]
+                data = [i['provider'], i['name'], '', i['code'], i['document'], i['link'], i['working'], '', i['old_link'], i['same'], i['checked']]
+                types = [
+                    "1. Fact Sheet",
+                    "2. Holdings Report",
+                    "3. Daily Holdings Report",
+                    "4. Prospectus",
+                    "5. Annual Report",
+                    "6. Semi-Annual Report",
+                    "7. Statement of Addition Information"
+                ]
+
             elif i['type'] == 'isin':
-                data = [i['provider'], i['name'], i['code'], '', i['document'], i['link'], i['working'], '', i['old_link'], i['checked']]
+                data = [i['provider'], i['name'], i['code'], '', i['document'], i['link'], i['working'], '', i['old_link'], i['same'], i['checked']]
+                types = [
+                    "1. Fact Sheet",
+                    "2. Holdings Report",
+                    "3. Daily Holdings Report",
+                    "4. Prospectus",
+                    "5. Annual Report",
+                    "6. Semi-Annual Report",
+                    "7. Statement of Addition Information",
+                    "8. KIID"
+                ]
 
             for typ in types:
                 data[7] = typ
@@ -951,7 +955,7 @@ if __name__ == '__main__':
                     color_number = False
                 else:
                     tree2.insert('', 'end', values=(data),)
-                    color_number = True
+                color_number = True
 
 
     def fixed_map(option):
@@ -965,11 +969,9 @@ if __name__ == '__main__':
             kw.setdefault('show', 'headings')  # hide column #0
             ttk.Treeview.__init__(self, master, **kw)
             # create checheckbox images
-            self._im_checked = PhotoImage('checked',
-                                             data=b'GIF89a\x0e\x00\x0e\x00\xf0\x00\x00\x00\x00\x00\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x0e\x00\x0e\x00\x00\x02#\x04\x82\xa9v\xc8\xef\xdc\x83k\x9ap\xe5\xc4\x99S\x96l^\x83qZ\xd7\x8d$\xa8\xae\x99\x15Zl#\xd3\xa9"\x15\x00;',
+            self._im_checked = PhotoImage('checked',file="tick.png",
                                              master=self)
-            self._im_unchecked = PhotoImage('unchecked',
-                                               data=b'GIF89a\x0e\x00\x0e\x00\xf0\x00\x00\x00\x00\x00\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x0e\x00\x0e\x00\x00\x02\x1e\x04\x82\xa9v\xc1\xdf"|i\xc2j\x19\xce\x06q\xed|\xd2\xe7\x89%yZ^J\x85\x8d\xb2\x00\x05\x00;',
+            self._im_unchecked = PhotoImage('unchecked',file="untick.png",
                                                master=self)
             style = ttk.Style(self)
             style.configure("cb.Treeview.Heading", font=(None, 13))
@@ -1005,7 +1007,7 @@ if __name__ == '__main__':
         def _on_click(self, event, item):
             """Handle click on items."""
             if self.identify_row(event.y) == item:
-                if self.identify_column(event.x) == '#11':  # click in 'Served' column
+                if self.identify_column(event.x) == '#12':  # click in 'Served' column
                     # toggle checkbox image
                     if self.tag_has('checked', item):
                         self.tag_remove(item, 'checked')
@@ -1078,7 +1080,7 @@ if __name__ == '__main__':
 
     scrollbary = Scrollbar(mainframe4, orient=VERTICAL)
     tree2 = CbTreeview2(mainframe4, columns=(
-    "Fund Provider", "Fund Name", "ISIN", "Cusip", "Document", "Website Link", "Working", "Document Kind", "Link Currently in Fund", "", "Overwrite"), selectmode="extended",
+    "Fund Provider", "Fund Name", "ISIN", "Cusip", "Document", "Website Link", "Working", "Document Kind", "Link Currently in Fund", "Same links?", "", "Overwrite"), selectmode="extended",
                         height=100, yscrollcommand=scrollbary.set)
 
     tree2.tag_configure('gr', background='#F9F9F9')
@@ -1094,20 +1096,22 @@ if __name__ == '__main__':
     tree2.heading('Working', text="Working", anchor=W)
     tree2.heading('Document Kind', text="Document Kind", anchor=W)
     tree2.heading('Link Currently in Fund', text="Link Currently in Fund", anchor=W)
+    tree2.heading('Same links?', text="Same links?", anchor=W)
     tree2.heading('', text="", anchor=W)
     tree2.heading('Overwrite', text="Overwrite", anchor=W)
     tree2.column('#0', stretch=NO, minwidth=0, width=0)
-    tree2.column('#1', stretch=NO, minwidth=0, width=180)
-    tree2.column('#2', stretch=NO, minwidth=0, width=215)
+    tree2.column('#1', stretch=NO, minwidth=0, width=170)
+    tree2.column('#2', stretch=NO, minwidth=0, width=200)
     tree2.column('#3', stretch=NO, minwidth=0, width=90)
     tree2.column('#4', stretch=NO, minwidth=0, width=90)
     tree2.column('#5', stretch=NO, minwidth=0, width=85)
-    tree2.column('#6', stretch=NO, minwidth=0, width=250)
+    tree2.column('#6', stretch=NO, minwidth=0, width=220)
     tree2.column('#7', stretch=NO, minwidth=0, width=70)
     tree2.column('#8', stretch=NO, minwidth=0, width=120)
     tree2.column('#9', stretch=NO, minwidth=0, width=180)
-    tree2.column('#10', stretch=NO, minwidth=0, width=0)
-    tree2.column('#11', stretch=NO, minwidth=0, width=80)
+    tree2.column('#10', stretch=NO, minwidth=0, width=80)
+    tree2.column('#11', stretch=NO, minwidth=0, width=0)
+    tree2.column('#12', stretch=NO, minwidth=0, width=80)
     tree2.pack(side=BOTTOM, fill=X, pady=(50,130))
 
 
@@ -1130,7 +1134,7 @@ if __name__ == '__main__':
 
 
     save_btn2 = Button(mainframe4, text='Save', width=20, command=save2)
-    save_btn2.place(x=1210, y=685)
+    save_btn2.place(x=1210, y=485) #CHANGE duhet 685
     save_btn2.config(bg="LightBlue1")
 
 
@@ -1150,7 +1154,7 @@ if __name__ == '__main__':
 
 
     export_btn = Button(mainframe4, text='Export', width=20, command=export)
-    export_btn.place(x=1210, y=725)
+    export_btn.place(x=1210, y=525) #CHANGE duhet 725
     export_btn.config(bg="LightBlue1")
 
 
@@ -1161,14 +1165,14 @@ if __name__ == '__main__':
     photo14 = ImageTk.PhotoImage(image14)
     right_button4 = Button(mainframe4, image=photo14, border=0)
     right_button4.config(bg="#3399ff")
-    right_button4.place(x=700, y=725)
+    right_button4.place(x=700, y=525) #CHANGE duhet 725
 
     image24 = Image.open("left.png")
     image24 = image24.resize((25, 25), Image.ANTIALIAS)
     photo24 = ImageTk.PhotoImage(image24)
     left_button4 = Button(mainframe4, image=photo24, border=0, command=switch43)
     left_button4.config(bg="#3399ff")
-    left_button4.place(x=660, y=725)
+    left_button4.place(x=660, y=525) #CHANGE duhet 725
 
     canvas = Canvas(mainframe4, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
