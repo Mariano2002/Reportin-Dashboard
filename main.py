@@ -12,17 +12,23 @@ from selenium.webdriver.support import expected_conditions as EC
 from tkinter import *
 from threading import Thread
 from tkinter import filedialog
+from tkinter import simpledialog
 import tkinter.messagebox as tkMessageBox
 import shutil
 from PIL import Image, ImageTk
 import tkinter.ttk as ttk
 import math
+from tkcalendar import DateEntry
+
+
+password = "12345"
 
 def switch12():
 
     mainframe1.pack_forget()
 
     mainframe2.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,10), pady=(0,0))
+
 
 def switch21():
     mainframe2.pack_forget()
@@ -56,6 +62,7 @@ def switch43():
 def get_data():
     filename = filename1
     last_date = DATE1.get()
+    print(last_date)
     with open(filename, encoding='utf-8-sig', newline='') as f:
         reader = csv.reader((line.replace('\0','') for line in f), delimiter=",")
         next(reader)
@@ -180,6 +187,7 @@ def scraper():
     # writer.writerow(['Fund Provider', 'Fund Name', 'ISIN', 'Cusip', 'Document Type', 'Link', 'Working', 'Document kind'])
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
+    options.add_argument("--headless")
     driver = webdriver.Chrome(options=options)
     scraped_data = []
 
@@ -234,17 +242,8 @@ def scraper():
             scraped_data.append({"provider":i['provider'], "name":i['name'], "code":i['code'], "type":"cusip", "document":document, "link":link_m, "working":working, "old_link":"", 'same':"", 'checked':"1"})
         time.sleep(2)
 
-    # code.config(state='normal')
-    # name.config(state='normal')
-    # csvf.config(state='normal')
-    # typec.config(state='normal')
-    # date.config(state='normal')
-    # justone_btn.config(state='normal')
-    # add_btn.config(state='normal')
-    # download.config(state='normal')
-    # start_btn.config(bg='LightBlue1')
-    # start_btn.config(text='Start')
-    # start_btn.config(state='normal')
+
+
     input_data = []
     csvf1.config(state='normal')
     date1.config(state='normal')
@@ -267,6 +266,9 @@ def scraper():
 def start():
     thread = Thread(target=scraper)
     thread.start()
+
+
+
 
 if __name__ == '__main__':
 
@@ -322,25 +324,30 @@ if __name__ == '__main__':
 
 
 
-    def handle_focus_in1(_):
-        if DATE1.get() == "MM/DD/YYYY" or DATE1.get() == "Example: 12/31/2021":
-            date1.delete(0, END)
-            date1.config(fg='black')
+    wiki = Label(root, borderwidth=.5, relief="solid", text="Explaining TEXT")
+    wiki.place(x=460, y=60, in_=mainframe1)
+    wiki.lower()
+    def on_enter1(event):
+        wiki.lift()
+    def on_leave1(enter):
+        wiki.lower(mainframe1)
+    image_info = Image.open("info.png")
+    image_info = image_info.resize((15, 15), Image.ANTIALIAS)
+    image_info = ImageTk.PhotoImage(image_info)
+    btn_info1 = Label(mainframe1, image=image_info, border=0)
+    btn_info1.config(bg="#3399ff")
+    btn_info1.place(x=450, y=85)
+    btn_info1.bind("<Enter>", on_enter1)
+    btn_info1.bind("<Leave>", on_leave1)
 
-    def handle_focus_out1(_):
-        if DATE1.get() == "":
-            date1.delete(0, END)
-            date1.config(fg='grey')
-            date1.insert(0, "Example: 12/31/2021")
+
 
 
     lbl_date1 = Label(mainframe1, bg='#3399ff', text="Effective Date:", font=('arial', 12), bd=10)
     lbl_date1.grid(row=1, sticky=W)
-    date1 = Entry(mainframe1, bg='white', textvariable=DATE1, font=('arial', 12), width=30, fg='grey')
+    date1 = DateEntry(mainframe1, locale='en_US', bg='white', textvariable=DATE1, font=('arial', 12), width=28, date_pattern='mm/dd/yyyy')  # custom formatting
     date1.grid(row=1, column=1, sticky=W)
-    date1.insert(0, "MM/DD/YYYY")
-    date1.bind("<FocusIn>", handle_focus_in1)
-    date1.bind("<FocusOut>", handle_focus_out1)
+
 
 
     lbl_pdf = Label(mainframe1, bg='#3399ff', text="Scrape PDF's", font=('arial', 12), bd=10)
@@ -416,14 +423,14 @@ if __name__ == '__main__':
     photo11 = ImageTk.PhotoImage(image11)
     right_button1 = Button(mainframe1, image=photo11, border=0, command=switch12)
     right_button1.config(bg="#3399ff")
-    right_button1.place(x=670, y=525) #CHANGE duhet 725
+    right_button1.place(x=670, y=575) #CHANGE duhet 725
 
     image21 = Image.open("left.png")
     image21 = image21.resize((25, 25), Image.ANTIALIAS)
     photo21 = ImageTk.PhotoImage(image21)
     left_button1 = Button(mainframe1, image=photo21, border=0)
     left_button1.config(bg="#3399ff")
-    left_button1.place(x=630, y=525) #CHANGE duhet 725
+    left_button1.place(x=630, y=575) #CHANGE duhet 725
 
     canvas = Canvas(mainframe1, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="gray55")
@@ -495,23 +502,26 @@ if __name__ == '__main__':
         tree1.see(item)
         entryedit = Text(mainframe2)
         entryedit.insert("1.0", item_text)
-
-        entryedit.place(x=x_long, y=75+tree1.index(item)*30, width=n_width, height=30)
+        if rrites1 == False:
+            index_number = tree1.index(item)-place1
+        else:
+            print(tree1.index(item))
+            print(place1)
+            if grow1 == False:
+                nr_fundit = len(tree1.get_children())-1
+                nr_fundit_i_bllokut_fundit = place1-14
+                diferenca = nr_fundit-nr_fundit_i_bllokut_fundit
+                index_number = tree1.index(item)-(place1-27+diferenca)
+            else:
+                index_number = tree1.index(item)-(place1-13)
+        print(index_number)
+        entryedit.place(x=x_long, y=75+index_number*30, width=n_width, height=30)
         entryedit.focus()
 
         def saveedit(event):
             value = entryedit.get("1.0",END).replace("\n","")
             entryedit.destroy()
-            list_check = []
-            if (column == "#2"):
-                for child in tree1.get_children():
-                    list_check.append(tree1.item(child)["values"][1])
-                if list_check.count(value) > 0:
-                    pass
-                else:
-                    tree1.set(item, column=column, value=value)
-            else:
-                tree1.set(item, column=column, value=value)
+            tree1.set(item, column=column, value=value)
 
 
         entryedit.bind("<FocusOut>", saveedit)
@@ -590,14 +600,11 @@ if __name__ == '__main__':
 
 
 
-    scrollbary = Scrollbar(mainframe2, orient=VERTICAL)
     tree1 = CbTreeview(mainframe2, columns=(
     "Fund Provider", "Website Link", "", "Checkmark"), selectmode="extended",
-                        height=100, yscrollcommand=scrollbary.set)
+                        height=100)
 
     tree1.tag_configure('gr', background='#F9F9F9')
-    scrollbary.config(command=tree1.yview)
-    scrollbary.pack(side=RIGHT, pady=(50,130), fill=Y)
 
     tree1.heading('Fund Provider', text="Fund Provider", anchor=W)
     tree1.heading('Website Link', text="Website Link", anchor=W)
@@ -611,6 +618,61 @@ if __name__ == '__main__':
     tree1.pack(side=BOTTOM, fill=X, pady=(50,130))
     tree1.bind('<Double-1>', live_edit)
 
+
+    def scrollwheel(event):
+        return 'break'
+    tree1.bind('<MouseWheel>', scrollwheel)
+
+    place1 = 0
+    rrites1 = False
+    grow1 = True
+    def move_back1():
+        global place1, rrites1, grow1
+        grow1 = True
+        if place1 != 0:
+            if rrites1 == True:
+                place1 -= 27
+                rrites1 = False
+            else:
+                place1 -= 14
+
+        tree1.see(tree1.get_children()[place1])
+        print(rrites1)
+        print(place1)
+
+
+    def move_for1():
+        global place1, rrites1, grow1
+        if grow1 == True:
+            if rrites1 == False:
+                place1 += 27
+                rrites1 = True
+            else:
+                place1 += 14
+        try:
+            tree1.see(tree1.get_children()[place1])
+            if place1 == len(tree1.get_children())-1:
+                grow1 = False
+        except:
+            tree1.see(tree1.get_children()[-1])
+            print(len(tree1.get_children()))
+            grow1 = False
+        print(rrites1)
+        print(place1)
+
+    image12_tr = Image.open("right.png")
+    image12_tr = image12_tr.resize((25, 25), Image.ANTIALIAS)
+    image12_tr = ImageTk.PhotoImage(image12_tr)
+    right_button2_tr = Button(mainframe2, image=image12_tr, border=0, command=move_for1)
+    right_button2_tr.config(bg="#3399ff")
+    right_button2_tr.place(x=670, y=525) #CHANGE duhet 725
+
+    image22_tr = Image.open("left.png")
+    image22_tr = image22_tr.resize((25, 25), Image.ANTIALIAS)
+    image22_tr = ImageTk.PhotoImage(image22_tr)
+    left_button2_tr = Button(mainframe2, image=image22_tr, border=0, command=move_back1)
+    left_button2_tr.config(bg="#3399ff")
+    left_button2_tr.place(x=630, y=525) #CHANGE duhet 725
 
     DisplayData1()
 
@@ -663,7 +725,7 @@ if __name__ == '__main__':
         file.close()
 
     save_btn = Button(mainframe2, text='Save Change', width=20, command=save1)
-    save_btn.place(x=1180, y=525) #CHANGE duhet 725
+    save_btn.place(x=1180, y=575) #CHANGE duhet 725
     save_btn.config(bg="LightBlue1")
 
 
@@ -674,14 +736,14 @@ if __name__ == '__main__':
     photo12 = ImageTk.PhotoImage(image12)
     right_button2 = Button(mainframe2, image=photo12, border=0, command=switch23)
     right_button2.config(bg="#3399ff")
-    right_button2.place(x=670, y=525) #CHANGE duhet 725
+    right_button2.place(x=670, y=575) #CHANGE duhet 725
 
     image22 = Image.open("left.png")
     image22 = image22.resize((25, 25), Image.ANTIALIAS)
     photo22 = ImageTk.PhotoImage(image22)
     left_button2 = Button(mainframe2, image=photo22, border=0, command=switch21)
     left_button2.config(bg="#3399ff")
-    left_button2.place(x=630, y=525) #CHANGE duhet 725
+    left_button2.place(x=630, y=575) #CHANGE duhet 725
 
     canvas = Canvas(mainframe2, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
@@ -722,7 +784,7 @@ if __name__ == '__main__':
         save1()
 
     upload_btn = Button(mainframe3, text='Upload Whitelist', width=20, command=UploadAction3)
-    upload_btn.place(x=570, y=50)
+    upload_btn.place(x=490, y=50)
     upload_btn.config(bg="LightBlue1")
 
 
@@ -751,7 +813,7 @@ if __name__ == '__main__':
 
 
     download_btn = Button(mainframe3, text='Download Whitelist', width=20, command=download1)
-    download_btn.place(x=570, y=90)
+    download_btn.place(x=490, y=90)
     download_btn.config(bg="LightBlue1")
 
 
@@ -799,7 +861,7 @@ if __name__ == '__main__':
 
 
     download_btn2 = Button(mainframe3, text='Download Scraper File', width=20, command=download2)
-    download_btn2.place(x=570, y=130)
+    download_btn2.place(x=660, y=50)
     download_btn2.config(bg="LightBlue1")
 
 
@@ -831,17 +893,17 @@ if __name__ == '__main__':
             filename5 = None
 
     upload_btn3 = Button(mainframe3, text='Upload Scraper File', width=20, command=UploadAction6)
-    upload_btn3.place(x=570, y=170)
+    upload_btn3.place(x=660, y=90)
     upload_btn3.config(bg="LightBlue1")
 
 
     run = Button(mainframe3, text="Run Scraper", width=20, height=2, bg="#009ACD", command=start)
     run.config(bg="LightBlue1")
-    run.place(x=665, y=220)
+    run.place(x=575, y=220)
 
 
     lbl = Label(mainframe3, bg='#3399ff', text="Compare to Fund Connect Fund Document Export", font=('arial', 11), bd=10)
-    lbl.place(x=550, y=275)
+    lbl.place(x=475, y=275)
 
 
     def UploadAction5(event=None):
@@ -857,9 +919,9 @@ if __name__ == '__main__':
             filename5 = None
 
     lbl_csvf3 = Label(mainframe3, bg='#3399ff', text="Input file", font=('arial', 12), bd=10)
-    lbl_csvf3.place(x=500, y=320)
+    lbl_csvf3.place(x=475, y=320)
     csvf3 = Button(mainframe3, text='Select file', width=38, command=UploadAction5)
-    csvf3.place(x=665, y=325)
+    csvf3.place(x=550, y=325)
 
 
 
@@ -869,11 +931,11 @@ if __name__ == '__main__':
 
     compare = Button(mainframe3, text="Compare", width=20, height=2, bg="#009ACD", command=compare)
     compare.config(bg="LightBlue1")
-    compare.place(x=665, y=400)
+    compare.place(x=575, y=375)
     compare.config(state="disabled")
 
     lbl = Label(mainframe3, bg='#3399ff', text="Click to next view after compare ran", font=('arial', 10), bd=10)
-    lbl.place(x=550, y=660)
+    lbl.place(x=475, y=660)
 
 
     image13 = Image.open("right.png")
@@ -881,14 +943,14 @@ if __name__ == '__main__':
     photo13 = ImageTk.PhotoImage(image13)
     right_button3 = Button(mainframe3, image=photo13, border=0, command=switch34)
     right_button3.config(bg="#3399ff")
-    right_button3.place(x=670, y=525) #CHANGE duhet 725
+    right_button3.place(x=670, y=575) #CHANGE duhet 725
 
     image23 = Image.open("left.png")
     image23 = image23.resize((25, 25), Image.ANTIALIAS)
     photo23 = ImageTk.PhotoImage(image23)
     left_button3 = Button(mainframe3, image=photo23, border=0, command=switch32)
     left_button3.config(bg="#3399ff")
-    left_button3.place(x=630, y=525) #CHANGE duhet 725
+    left_button3.place(x=630, y=575) #CHANGE duhet 725
 
     canvas = Canvas(mainframe3, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
@@ -963,6 +1025,57 @@ if __name__ == '__main__':
                 if elm[:2] != ("!disabled", "!selected")]
 
 
+    def live_edit2(event):
+        global entryedit2
+        try:
+            entryedit2.destroy()
+        except:
+            pass
+        column = tree2.identify_column(event.x)
+        if column == "#12":
+            return
+        row = tree2.identify_row(event.y)
+        cols = ('#0', ) + tree2.cget('columns')
+        n_width = tree2.column(cols[int(column.replace("#",""))], 'width')
+        x_long = 0
+        for i in range(0,int(column.replace("#",""))):
+            x_long = x_long + tree2.column(cols[i], 'width')
+        print(1)
+        if(row == ""):
+            return
+        print(2)
+        item = tree2.selection()[0]
+        item_text = tree2.item(item, "values")[int(column.replace("#",""))-1]
+        print(item)
+        tree2.see(item)
+        entryedit2 = Text(mainframe4)
+        entryedit2.insert("1.0", item_text)
+        if rrites2 == False:
+            index_number = tree2.index(item)-place2
+        else:
+            print(tree2.index(item))
+            print(place2)
+            if grow2 == False:
+                nr_fundit = len(tree2.get_children())-1
+                nr_fundit_i_bllokut_fundit = place2-14
+                diferenca = nr_fundit-nr_fundit_i_bllokut_fundit
+                index_number = tree2.index(item)-(place2-27+diferenca)
+            else:
+                index_number = tree2.index(item)-(place2-13)
+        print(index_number)
+        entryedit2.place(x=x_long, y=75+index_number*30, width=n_width, height=30)
+        entryedit2.focus()
+
+        def saveedit(event):
+            value = entryedit2.get("1.0",END).replace("\n","")
+            entryedit2.destroy()
+            tree2.set(item, column=column, value=value)
+
+
+        entryedit2.bind("<FocusOut>", saveedit)
+        entryedit2.bind("<Return>", saveedit)
+
+
     class CbTreeview2(ttk.Treeview):
         def __init__(self, master=None, **kw):
             kw.setdefault('style', 'cb.Treeview')
@@ -1012,11 +1125,11 @@ if __name__ == '__main__':
                     if self.tag_has('checked', item):
                         self.tag_remove(item, 'checked')
                         self.tag_add(item, ('unchecked',))
-                        self.set(item, column='#10', value=0)
+                        self.set(item, column='#11', value=0)
                     else:
                         self.tag_remove(item, 'unchecked')
                         self.tag_add(item, ('checked',))
-                        self.set(item, column='#10', value=1)
+                        self.set(item, column='#11', value=1)
 
 
     def check_all():
@@ -1078,14 +1191,11 @@ if __name__ == '__main__':
 
 
 
-    scrollbary = Scrollbar(mainframe4, orient=VERTICAL)
     tree2 = CbTreeview2(mainframe4, columns=(
-    "Fund Provider", "Fund Name", "ISIN", "Cusip", "Document", "Website Link", "Working", "Document Kind", "Link Currently in Fund", "Same links?", "", "Overwrite"), selectmode="extended",
-                        height=100, yscrollcommand=scrollbary.set)
+    "Fund Provider", "Fund Name", "ISIN", "Cusip", "Document", "Website Link", "Working", "Document Kind", "Link Currently in Fund", "Matching", "", "Overwrite"), selectmode="extended",
+                        height=100)
 
     tree2.tag_configure('gr', background='#F9F9F9')
-    scrollbary.config(command=tree2.yview)
-    scrollbary.pack(side=RIGHT, pady=(50,130), fill=Y)
 
     tree2.heading('Fund Provider', text="Fund Provider", anchor=W)
     tree2.heading('Fund Name', text="Fund Name", anchor=W)
@@ -1096,7 +1206,7 @@ if __name__ == '__main__':
     tree2.heading('Working', text="Working", anchor=W)
     tree2.heading('Document Kind', text="Document Kind", anchor=W)
     tree2.heading('Link Currently in Fund', text="Link Currently in Fund", anchor=W)
-    tree2.heading('Same links?', text="Same links?", anchor=W)
+    tree2.heading('Matching', text="Matching", anchor=W)
     tree2.heading('', text="", anchor=W)
     tree2.heading('Overwrite', text="Overwrite", anchor=W)
     tree2.column('#0', stretch=NO, minwidth=0, width=0)
@@ -1113,7 +1223,96 @@ if __name__ == '__main__':
     tree2.column('#11', stretch=NO, minwidth=0, width=0)
     tree2.column('#12', stretch=NO, minwidth=0, width=80)
     tree2.pack(side=BOTTOM, fill=X, pady=(50,130))
+    def nothing():
+        return
 
+    def un_lock():
+        global locked
+        if locked == True:
+            password_in = ""
+            while password_in != password:
+                password_in = simpledialog.askstring("Password", "Enter password:", show='*')
+            btn_locked.config(image=image_unlock)
+            tree2.bind('<Double-1>', live_edit2)
+            locked = False
+
+        elif locked == False:
+            btn_locked.config(image=image_lock)
+            tree2.bind('<Double-1>', nothing)
+            locked = True
+
+    locked = True
+    image_lock = Image.open("locked.png")
+    image_lock = image_lock.resize((25, 25), Image.ANTIALIAS)
+    image_lock = ImageTk.PhotoImage(image_lock)
+    image_unlock = Image.open("unlocked.png")
+    image_unlock = image_unlock.resize((25, 25), Image.ANTIALIAS)
+    image_unlock = ImageTk.PhotoImage(image_unlock)
+    btn_locked = Button(mainframe4, image=image_lock, border=0, command=un_lock)
+    btn_locked.config(bg="#3399ff")
+    btn_locked.place(x=10, y=10)
+
+
+
+
+
+
+
+
+    def scrollwheel(event):
+        return 'break'
+    tree2.bind('<MouseWheel>', scrollwheel)
+
+    place2 = 0
+    rrites2 = False
+    grow2 = True
+    def move_back2():
+        global place2, rrites2, grow2
+        grow2 = True
+        if place2 != 0:
+            if rrites2 == True:
+                place2 -= 27
+                rrites2 = False
+            else:
+                place2 -= 14
+
+        tree2.see(tree2.get_children()[place2])
+        print(rrites2)
+        print(place2)
+
+
+    def move_for2():
+        global place2, rrites2, grow2
+        if grow2 == True:
+            if rrites2 == False:
+                place2 += 27
+                rrites2 = True
+            else:
+                place2 += 14
+        try:
+            tree2.see(tree2.get_children()[place2])
+            if place2 == len(tree2.get_children())-1:
+                grow2 = False
+        except:
+            tree2.see(tree2.get_children()[-1])
+            print(len(tree2.get_children()))
+            grow2 = False
+        print(rrites2)
+        print(place2)
+
+    image14_tr = Image.open("right.png")
+    image14_tr = image14_tr.resize((25, 25), Image.ANTIALIAS)
+    image14_tr = ImageTk.PhotoImage(image14_tr)
+    right_button4_tr = Button(mainframe4, image=image14_tr, border=0, command=move_for2)
+    right_button4_tr.config(bg="#3399ff")
+    right_button4_tr.place(x=670, y=525) #CHANGE duhet 725
+
+    image24_tr = Image.open("left.png")
+    image24_tr = image24_tr.resize((25, 25), Image.ANTIALIAS)
+    image24_tr = ImageTk.PhotoImage(image24_tr)
+    left_button4_tr = Button(mainframe4, image=image24_tr, border=0, command=move_back2)
+    left_button4_tr.config(bg="#3399ff")
+    left_button4_tr.place(x=630, y=525) #CHANGE duhet 725
 
 
 
@@ -1154,7 +1353,7 @@ if __name__ == '__main__':
 
 
     export_btn = Button(mainframe4, text='Export', width=20, command=export)
-    export_btn.place(x=1210, y=525) #CHANGE duhet 725
+    export_btn.place(x=1210, y=575) #CHANGE duhet 725
     export_btn.config(bg="LightBlue1")
 
 
@@ -1165,14 +1364,14 @@ if __name__ == '__main__':
     photo14 = ImageTk.PhotoImage(image14)
     right_button4 = Button(mainframe4, image=photo14, border=0)
     right_button4.config(bg="#3399ff")
-    right_button4.place(x=700, y=525) #CHANGE duhet 725
+    right_button4.place(x=700, y=575) #CHANGE duhet 725
 
     image24 = Image.open("left.png")
     image24 = image24.resize((25, 25), Image.ANTIALIAS)
     photo24 = ImageTk.PhotoImage(image24)
     left_button4 = Button(mainframe4, image=photo24, border=0, command=switch43)
     left_button4.config(bg="#3399ff")
-    left_button4.place(x=660, y=525) #CHANGE duhet 725
+    left_button4.place(x=660, y=575) #CHANGE duhet 725
 
     canvas = Canvas(mainframe4, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
