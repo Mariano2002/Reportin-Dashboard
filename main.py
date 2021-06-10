@@ -27,7 +27,7 @@ def switch12():
 
     mainframe1.pack_forget()
 
-    mainframe2.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,10), pady=(0,0))
+    mainframe2.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,30), pady=(0,0))
 
 
 def switch21():
@@ -45,7 +45,7 @@ def switch32():
 
     mainframe3.pack_forget()
 
-    mainframe2.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,10), pady=(0,0))
+    mainframe2.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,30), pady=(0,0))
 
 def switch34():
 
@@ -278,11 +278,11 @@ if __name__ == '__main__':
 
     root = Tk()
     root.title("Fund Document Scraper \\ Menu")
-    root.geometry("%dx%d+0+0" % (1400, 700)) #CHANGE duhet 900
+    root.geometry("%dx%d+0+0" % (1200, 700)) #CHANGE duhet 900
     root.resizable(1, 1)
     root.config(bg="#3399ff")
     root.resizable(False, False)
-    root.state('zoomed') #CHANGE hiqe
+    # root.state('zoomed') #CHANGE hiqe
 
     title = Frame(root, bd=1, relief=SOLID)
     title.pack(side=TOP, pady=10)
@@ -318,14 +318,14 @@ if __name__ == '__main__':
 
 
     lbl_csvf1 = Label(mainframe1, bg='#3399ff', text="Input file", font=('arial', 12), bd=10)
-    lbl_csvf1.grid(row=0, pady=(75,0), sticky=W)
+    lbl_csvf1.grid(row=0, pady=(25,0), sticky=W)
     csvf1 = Button(mainframe1, text='Select file', width=38, command=UploadAction1)
-    csvf1.grid(row=0, column=1, pady=(75,0), sticky=W)
+    csvf1.grid(row=0, column=1, pady=(25,0), sticky=W)
 
 
 
     wiki = Label(root, borderwidth=.5, relief="solid", text="Explaining TEXT")
-    wiki.place(x=460, y=60, in_=mainframe1)
+    wiki.place(x=460, y=15, in_=mainframe1)
     wiki.lower()
     def on_enter1(event):
         wiki.lift()
@@ -336,7 +336,7 @@ if __name__ == '__main__':
     image_info = ImageTk.PhotoImage(image_info)
     btn_info1 = Label(mainframe1, image=image_info, border=0)
     btn_info1.config(bg="#3399ff")
-    btn_info1.place(x=450, y=85)
+    btn_info1.place(x=450, y=37)
     btn_info1.bind("<Enter>", on_enter1)
     btn_info1.bind("<Leave>", on_leave1)
 
@@ -345,7 +345,7 @@ if __name__ == '__main__':
 
     lbl_date1 = Label(mainframe1, bg='#3399ff', text="Effective Date:", font=('arial', 12), bd=10)
     lbl_date1.grid(row=1, sticky=W)
-    date1 = DateEntry(mainframe1, locale='en_US', bg='white', textvariable=DATE1, font=('arial', 12), width=28, date_pattern='mm/dd/yyyy')  # custom formatting
+    date1 = DateEntry(mainframe1, bg='white', textvariable=DATE1, font=('arial', 12), width=28, date_pattern='mm/dd/yyyy')  # custom formatting
     date1.grid(row=1, column=1, sticky=W)
 
 
@@ -358,7 +358,7 @@ if __name__ == '__main__':
 
 
     lbl = Label(mainframe1, bg='#3399ff', text="___________________________________________________________________________________________________________________________________", font=('arial', 12), bd=10)
-    lbl.grid(row=3,columnspan=50, pady=(60,0), padx=(0,0))
+    lbl.grid(row=3,columnspan=50, pady=(30,0), padx=(0,0))
     lbl = Label(mainframe1, bg='#3399ff', text="Manually add funds to Scraper", font=('arial', 12), bd=10)
     lbl.grid(row=4,columnspan=50, sticky=W)
 
@@ -423,21 +423,21 @@ if __name__ == '__main__':
     photo11 = ImageTk.PhotoImage(image11)
     right_button1 = Button(mainframe1, image=photo11, border=0, command=switch12)
     right_button1.config(bg="#3399ff")
-    right_button1.place(x=670, y=575) #CHANGE duhet 725
+    right_button1.place(x=570, y=570) #CHANGE duhet 725
 
     image21 = Image.open("left.png")
     image21 = image21.resize((25, 25), Image.ANTIALIAS)
     photo21 = ImageTk.PhotoImage(image21)
     left_button1 = Button(mainframe1, image=photo21, border=0)
     left_button1.config(bg="#3399ff")
-    left_button1.place(x=630, y=575) #CHANGE duhet 725
+    left_button1.place(x=530, y=570) #CHANGE duhet 725
 
     canvas = Canvas(mainframe1, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="gray55")
     canvas.create_rectangle(12, 0, 22, 10, outline="#3399ff", fill="black")
     canvas.create_rectangle(24, 0, 34, 10, outline="#3399ff", fill="black")
     canvas.create_rectangle(36, 0, 46, 10, outline="#3399ff", fill="black")
-    canvas.place(x= 640, y=700)
+    canvas.place(x=540, y=550)
 ###############################################################################################################################################################################################################################
 
     ################### VARIABLE #####################
@@ -481,6 +481,7 @@ if __name__ == '__main__':
 
     def live_edit(event):
         global entryedit
+        print(1)
         try:
             entryedit.destroy()
         except:
@@ -602,7 +603,7 @@ if __name__ == '__main__':
 
     tree1 = CbTreeview(mainframe2, columns=(
     "Fund Provider", "Website Link", "", "Checkmark"), selectmode="extended",
-                        height=100)
+                        height=15)
 
     tree1.tag_configure('gr', background='#F9F9F9')
 
@@ -611,11 +612,11 @@ if __name__ == '__main__':
     tree1.heading('', text="", anchor=W)
     tree1.heading('Checkmark', text="Checkmark", anchor=W)
     tree1.column('#0', stretch=NO, minwidth=0, width=0)
-    tree1.column('#1', stretch=NO, minwidth=0, width=340)
-    tree1.column('#2', stretch=NO, minwidth=0, width=845)
+    tree1.column('#1', stretch=NO, minwidth=0, width=335)
+    tree1.column('#2', stretch=NO, minwidth=0, width=650)
     tree1.column('#3', stretch=NO, minwidth=0, width=0)
     tree1.column('#4', stretch=NO, minwidth=0, width=145)
-    tree1.pack(side=BOTTOM, fill=X, pady=(50,130))
+    tree1.pack(side=TOP, fill=X, pady=(50,103))
     tree1.bind('<Double-1>', live_edit)
 
 
@@ -665,14 +666,14 @@ if __name__ == '__main__':
     image12_tr = ImageTk.PhotoImage(image12_tr)
     right_button2_tr = Button(mainframe2, image=image12_tr, border=0, command=move_for1)
     right_button2_tr.config(bg="#3399ff")
-    right_button2_tr.place(x=670, y=525) #CHANGE duhet 725
+    right_button2_tr.place(x=570, y=500) #CHANGE duhet 725
 
     image22_tr = Image.open("left.png")
     image22_tr = image22_tr.resize((25, 25), Image.ANTIALIAS)
     image22_tr = ImageTk.PhotoImage(image22_tr)
     left_button2_tr = Button(mainframe2, image=image22_tr, border=0, command=move_back1)
     left_button2_tr.config(bg="#3399ff")
-    left_button2_tr.place(x=630, y=525) #CHANGE duhet 725
+    left_button2_tr.place(x=530, y=500) #CHANGE duhet 725
 
     DisplayData1()
 
@@ -690,7 +691,7 @@ if __name__ == '__main__':
         save1()
 
     upload_btn2 = Button(mainframe2, text='Upload Whitelist', width=20, command=UploadAction2)
-    upload_btn2.place(x=1180, y=10)
+    upload_btn2.place(x=980, y=10)
     upload_btn2.config(bg="LightBlue1")
 
 
@@ -710,7 +711,7 @@ if __name__ == '__main__':
             tree1.selection_set(child_id)
 
     add_btn2 = Button(mainframe2, text='Add Website', width=20, command=new_row)
-    add_btn2.place(x=1180, y=485) #CHANGE duhet 625
+    add_btn2.place(x=980, y=515) #CHANGE duhet 625
     add_btn2.config(bg="LightBlue1")
 
 
@@ -725,7 +726,7 @@ if __name__ == '__main__':
         file.close()
 
     save_btn = Button(mainframe2, text='Save Change', width=20, command=save1)
-    save_btn.place(x=1180, y=575) #CHANGE duhet 725
+    save_btn.place(x=980, y=555) #CHANGE duhet 725
     save_btn.config(bg="LightBlue1")
 
 
@@ -736,21 +737,21 @@ if __name__ == '__main__':
     photo12 = ImageTk.PhotoImage(image12)
     right_button2 = Button(mainframe2, image=photo12, border=0, command=switch23)
     right_button2.config(bg="#3399ff")
-    right_button2.place(x=670, y=575) #CHANGE duhet 725
+    right_button2.place(x=570, y=570) #CHANGE duhet 725
 
     image22 = Image.open("left.png")
     image22 = image22.resize((25, 25), Image.ANTIALIAS)
     photo22 = ImageTk.PhotoImage(image22)
     left_button2 = Button(mainframe2, image=photo22, border=0, command=switch21)
     left_button2.config(bg="#3399ff")
-    left_button2.place(x=630, y=575) #CHANGE duhet 725
+    left_button2.place(x=530, y=570) #CHANGE duhet 725
 
     canvas = Canvas(mainframe2, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
     canvas.create_rectangle(12, 0, 22, 10, outline="#3399ff", fill="gray55")
     canvas.create_rectangle(24, 0, 34, 10, outline="#3399ff", fill="black")
     canvas.create_rectangle(36, 0, 46, 10, outline="#3399ff", fill="black")
-    canvas.place(x= 640, y=700)
+    canvas.place(x=540, y=550)
 
     mainframe2.pack_forget()
 
@@ -767,7 +768,7 @@ if __name__ == '__main__':
 
 
     lbl = Label(mainframe3, bg='#3399ff', text="Additional Functions", font=('arial', 11), bd=10)
-    lbl.place(x=570, y=0)
+    lbl.place(x=470, y=0)
 
 
     def UploadAction3(event=None):
@@ -784,7 +785,7 @@ if __name__ == '__main__':
         save1()
 
     upload_btn = Button(mainframe3, text='Upload Whitelist', width=20, command=UploadAction3)
-    upload_btn.place(x=490, y=50)
+    upload_btn.place(x=390, y=50)
     upload_btn.config(bg="LightBlue1")
 
 
@@ -813,7 +814,7 @@ if __name__ == '__main__':
 
 
     download_btn = Button(mainframe3, text='Download Whitelist', width=20, command=download1)
-    download_btn.place(x=490, y=90)
+    download_btn.place(x=390, y=90)
     download_btn.config(bg="LightBlue1")
 
 
@@ -861,7 +862,7 @@ if __name__ == '__main__':
 
 
     download_btn2 = Button(mainframe3, text='Download Scraper File', width=20, command=download2)
-    download_btn2.place(x=660, y=50)
+    download_btn2.place(x=560, y=50)
     download_btn2.config(bg="LightBlue1")
 
 
@@ -893,17 +894,17 @@ if __name__ == '__main__':
             filename5 = None
 
     upload_btn3 = Button(mainframe3, text='Upload Scraper File', width=20, command=UploadAction6)
-    upload_btn3.place(x=660, y=90)
+    upload_btn3.place(x=560, y=90)
     upload_btn3.config(bg="LightBlue1")
 
 
     run = Button(mainframe3, text="Run Scraper", width=20, height=2, bg="#009ACD", command=start)
     run.config(bg="LightBlue1")
-    run.place(x=575, y=220)
+    run.place(x=475, y=220)
 
 
     lbl = Label(mainframe3, bg='#3399ff', text="Compare to Fund Connect Fund Document Export", font=('arial', 11), bd=10)
-    lbl.place(x=475, y=275)
+    lbl.place(x=375, y=275)
 
 
     def UploadAction5(event=None):
@@ -919,9 +920,9 @@ if __name__ == '__main__':
             filename5 = None
 
     lbl_csvf3 = Label(mainframe3, bg='#3399ff', text="Input file", font=('arial', 12), bd=10)
-    lbl_csvf3.place(x=475, y=320)
+    lbl_csvf3.place(x=375, y=320)
     csvf3 = Button(mainframe3, text='Select file', width=38, command=UploadAction5)
-    csvf3.place(x=550, y=325)
+    csvf3.place(x=450, y=325)
 
 
 
@@ -931,11 +932,11 @@ if __name__ == '__main__':
 
     compare = Button(mainframe3, text="Compare", width=20, height=2, bg="#009ACD", command=compare)
     compare.config(bg="LightBlue1")
-    compare.place(x=575, y=375)
+    compare.place(x=475, y=375)
     compare.config(state="disabled")
 
     lbl = Label(mainframe3, bg='#3399ff', text="Click to next view after compare ran", font=('arial', 10), bd=10)
-    lbl.place(x=475, y=660)
+    lbl.place(x=450, y=510)
 
 
     image13 = Image.open("right.png")
@@ -943,21 +944,21 @@ if __name__ == '__main__':
     photo13 = ImageTk.PhotoImage(image13)
     right_button3 = Button(mainframe3, image=photo13, border=0, command=switch34)
     right_button3.config(bg="#3399ff")
-    right_button3.place(x=670, y=575) #CHANGE duhet 725
+    right_button3.place(x=570, y=570) #CHANGE duhet 725
 
     image23 = Image.open("left.png")
     image23 = image23.resize((25, 25), Image.ANTIALIAS)
     photo23 = ImageTk.PhotoImage(image23)
     left_button3 = Button(mainframe3, image=photo23, border=0, command=switch32)
     left_button3.config(bg="#3399ff")
-    left_button3.place(x=630, y=575) #CHANGE duhet 725
+    left_button3.place(x=530, y=570) #CHANGE duhet 725
 
     canvas = Canvas(mainframe3, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
     canvas.create_rectangle(12, 0, 22, 10, outline="#3399ff", fill="black")
     canvas.create_rectangle(24, 0, 34, 10, outline="#3399ff", fill="gray55")
     canvas.create_rectangle(36, 0, 46, 10, outline="#3399ff", fill="black")
-    canvas.place(x= 640, y=700)
+    canvas.place(x=540, y=550)
 
 ###############################################################################################################################################################################################################################
 
@@ -1176,11 +1177,11 @@ if __name__ == '__main__':
 
 
     checkall = Button(mainframe4, text='Check All', width=20, command=check_all)
-    checkall.place(x=1210, y=10)
+    checkall.place(x=1030, y=10)
     checkall.config(bg="LightBlue1")
 
     checkall = Button(mainframe4, text='Uncheck All', width=20, command=uncheck_all)
-    checkall.place(x=1050, y=10)
+    checkall.place(x=870, y=10)
     checkall.config(bg="LightBlue1")
 
     style = ttk.Style()
@@ -1193,7 +1194,7 @@ if __name__ == '__main__':
 
     tree2 = CbTreeview2(mainframe4, columns=(
     "Fund Provider", "Fund Name", "ISIN", "Cusip", "Document", "Website Link", "Working", "Document Kind", "Link Currently in Fund", "Matching", "", "Overwrite"), selectmode="extended",
-                        height=100)
+                        height=14)
 
     tree2.tag_configure('gr', background='#F9F9F9')
 
@@ -1210,19 +1211,19 @@ if __name__ == '__main__':
     tree2.heading('', text="", anchor=W)
     tree2.heading('Overwrite', text="Overwrite", anchor=W)
     tree2.column('#0', stretch=NO, minwidth=0, width=0)
-    tree2.column('#1', stretch=NO, minwidth=0, width=170)
-    tree2.column('#2', stretch=NO, minwidth=0, width=200)
+    tree2.column('#1', stretch=NO, minwidth=0, width=110)
+    tree2.column('#2', stretch=NO, minwidth=0, width=100)
     tree2.column('#3', stretch=NO, minwidth=0, width=90)
     tree2.column('#4', stretch=NO, minwidth=0, width=90)
     tree2.column('#5', stretch=NO, minwidth=0, width=85)
-    tree2.column('#6', stretch=NO, minwidth=0, width=220)
+    tree2.column('#6', stretch=NO, minwidth=0, width=190)
     tree2.column('#7', stretch=NO, minwidth=0, width=70)
     tree2.column('#8', stretch=NO, minwidth=0, width=120)
-    tree2.column('#9', stretch=NO, minwidth=0, width=180)
-    tree2.column('#10', stretch=NO, minwidth=0, width=80)
+    tree2.column('#9', stretch=NO, minwidth=0, width=170)
+    tree2.column('#10', stretch=NO, minwidth=0, width=75)
     tree2.column('#11', stretch=NO, minwidth=0, width=0)
     tree2.column('#12', stretch=NO, minwidth=0, width=80)
-    tree2.pack(side=BOTTOM, fill=X, pady=(50,130))
+    tree2.pack(side=BOTTOM, fill=X, pady=(50,103))
     def nothing():
         return
 
@@ -1232,6 +1233,8 @@ if __name__ == '__main__':
             password_in = ""
             while password_in != password:
                 password_in = simpledialog.askstring("Password", "Enter password:", show='*')
+                if password_in == None:
+                    return
             btn_locked.config(image=image_unlock)
             tree2.bind('<Double-1>', live_edit2)
             locked = False
@@ -1305,14 +1308,14 @@ if __name__ == '__main__':
     image14_tr = ImageTk.PhotoImage(image14_tr)
     right_button4_tr = Button(mainframe4, image=image14_tr, border=0, command=move_for2)
     right_button4_tr.config(bg="#3399ff")
-    right_button4_tr.place(x=670, y=525) #CHANGE duhet 725
+    right_button4_tr.place(x=600, y=500) #CHANGE duhet 725
 
     image24_tr = Image.open("left.png")
     image24_tr = image24_tr.resize((25, 25), Image.ANTIALIAS)
     image24_tr = ImageTk.PhotoImage(image24_tr)
     left_button4_tr = Button(mainframe4, image=image24_tr, border=0, command=move_back2)
     left_button4_tr.config(bg="#3399ff")
-    left_button4_tr.place(x=630, y=525) #CHANGE duhet 725
+    left_button4_tr.place(x=560, y=500) #CHANGE duhet 725
 
 
 
@@ -1333,7 +1336,7 @@ if __name__ == '__main__':
 
 
     save_btn2 = Button(mainframe4, text='Save', width=20, command=save2)
-    save_btn2.place(x=1210, y=485) #CHANGE duhet 685
+    save_btn2.place(x=1030, y=515) #CHANGE duhet 685
     save_btn2.config(bg="LightBlue1")
 
 
@@ -1353,7 +1356,7 @@ if __name__ == '__main__':
 
 
     export_btn = Button(mainframe4, text='Export', width=20, command=export)
-    export_btn.place(x=1210, y=575) #CHANGE duhet 725
+    export_btn.place(x=1030, y=555) #CHANGE duhet 725
     export_btn.config(bg="LightBlue1")
 
 
@@ -1364,20 +1367,20 @@ if __name__ == '__main__':
     photo14 = ImageTk.PhotoImage(image14)
     right_button4 = Button(mainframe4, image=photo14, border=0)
     right_button4.config(bg="#3399ff")
-    right_button4.place(x=700, y=575) #CHANGE duhet 725
+    right_button4.place(x=600, y=570) #CHANGE duhet 725
 
     image24 = Image.open("left.png")
     image24 = image24.resize((25, 25), Image.ANTIALIAS)
     photo24 = ImageTk.PhotoImage(image24)
     left_button4 = Button(mainframe4, image=photo24, border=0, command=switch43)
     left_button4.config(bg="#3399ff")
-    left_button4.place(x=660, y=575) #CHANGE duhet 725
+    left_button4.place(x=560, y=570) #CHANGE duhet 725
 
     canvas = Canvas(mainframe4, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
     canvas.create_rectangle(12, 0, 22, 10, outline="#3399ff", fill="black")
     canvas.create_rectangle(24, 0, 34, 10, outline="#3399ff", fill="black")
     canvas.create_rectangle(36, 0, 46, 10, outline="#3399ff", fill="gray55")
-    canvas.place(x=670, y=700)
+    canvas.place(x=570, y=550)
 
     root.mainloop()
