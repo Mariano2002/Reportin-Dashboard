@@ -37,7 +37,7 @@ import subprocess
 # Import Pickled Files
 
 # app_home = '/home/staff/nfantini/fc-product/data/'
-app_home = "C:/Users/Mariano/PycharmProjects/Pune/fc-product/data/"  # running locally
+app_home = "c:/Users/Aleksander/PycharmProjects/fc-product/data/"  # running locally
 
 # df_mdm_import = "df_mdm.pkl"
 df_direct_bal_import = app_home + "df_direct_bal.pkl"
@@ -2826,12 +2826,16 @@ tabs = pn.Tabs(
 ).servable()
 param1 = ['FC_Dashboard_pdf.html', 'FC_Dashboard.pdf']
 
+#gspec.save('FC_Dashboard.html', resources=INLINE, embed=True)
+#gspec_pdf.save('FC_Dashboard_pdf.html', resources=INLINE, embed=True)
+#subprocess.call(["python.exe", "converter.py"] + param1, shell=False)
+
 gspec.save('FC_Dashboard.html', resources=INLINE, embed=True)
 gspec_pdf.save('FC_Dashboard_pdf.html', resources=INLINE, embed=True)
-subprocess.call(["python.exe", "converter.py"] + param1, shell=False)
+subprocess.call([r"C:\Users\Aleksander\PycharmProjects\fc-product2\venv\Scripts\python.exe", "converter.py"] + param1, shell=False) #TODO change to python.exe on VDI for subprocess
 
-fromaddr = "marianobaci46@gmail.com"
-toaddr = "marianobaci22@gmail.com"
+fromaddr = "fundconnect@globallink.com"
+toaddr = "anussbaum@statestreet.com,btreves@globallink.com,eric_wolf@statestreet.com,KCConn@StateStreet.com,gpfortuna@statestreet.com,SDawson1@StateStreet.com,mjshapcott@statestreet.com,GPennycooke@StateStreet.com"
 msg = MIMEMultipart()
 msg['From'] = fromaddr
 msg['To'] = toaddr
@@ -2858,15 +2862,14 @@ encoders.encode_base64(p1)
 p1.add_header('Content-Disposition', "attachment; filename= %s" % filename1)
 msg.attach(p1)
 
-s = smtplib.SMTP('smtp.gmail.com', 587)
+s = smtplib.SMTP('mail.ny2.eexchange.com')
 
-s.starttls()
+#s.starttls()
 
-s.login(fromaddr, "mycgaihtnmlmenwi")
+# s.login(fromaddr, "dfpfkwxbkfnzspcz")
 
 text = msg.as_string()
 
 s.sendmail(fromaddr, toaddr, text)
 
 s.quit()
-
