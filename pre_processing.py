@@ -10,6 +10,9 @@ from functools import reduce
 import calendar
 import socket
 
+# define empty list which will be used to store exclusions
+list_of_exclusion = {}
+
 hostname = socket.gethostname()
 print(hostname)
 if 'btreves01-vdi.pc.ny2' in hostname:
@@ -30,13 +33,15 @@ session = argon.Session(server='BT',  username='anussbaum')
 #print("before query")
 #print(datetime.datetime.now())
 #
-##Write
+# define directory path
 base_local = app_home + "base_bal_df.pkl"
 # rev_local = app_home + "base_rev_df.pkl"
 revRates_local = app_home + "base_revRate_df.pkl"
 volume_local = app_home + "volume_df.pkl"
 revRatesLookup_local = app_home + "revRate_Lookup_df"
+holiday_table_local = app_home + "holiday_table.pkl"
 
+# get data from argon and create pickle files
 df_base_bal = session.get_csv("get(activeBalance30Days)") #activeBalance and 1
 df_base_bal.to_pickle(base_local)
 # df_base_revenue = session.get_csv("file(revenue15)")
@@ -51,13 +56,16 @@ df_base_volume.to_pickle(volume_local)
 df_base_revenueRates = session.get_csv("ordFCRatesQuery()")
 df_base_revenueRates.to_pickle(revRates_local)
 
+df_holiday_table = session.get_csv("ordFCHolidayQuery()")
+df_holiday_table.to_pickle(holiday_table_local)
 
+# read pickle files and create data frames
 df_base_bal = pd.read_pickle(base_local)
 # df_base_revenue = pd.read_pickle(rev_local)
 df_base_revenueRates = pd.read_pickle(revRates_local)
 df_base_volume = pd.read_pickle(volume_local)
 df_base_revenue_rate_type_lookup = pd.read_pickle(revRatesLookup_local)
-
+df_holiday_table = pd.read_pickle(holiday_table_local)
 
 #
 # b.
@@ -91,6 +99,11 @@ report_only_inst = ['opsssga', 'ssgmbh', 'ssgmbdtest', 'sttsma', 'sttsweep']
 report_only_fp = ['State Street Internal Transfer', 'Alternative Investments', 'Separately Managed Accounts', 'Unit Dealing - SSBG Agent Fund Trading', 'Unit Dealing - Caceis Luxembourg', 'Unit Dealing - BP2S Luxembourg','Unit Dealing - Allianz Global Invest']
 # c. Accounts to exclude
 report_only_inv_acc = ['BV Cash Management - Sweep', 'CSSIL Cash Management - Sweep', '9G - Sweep', '6G - Sweep', '6E - Sweep', '96 - Sweep', '3G - Sweep']
+
+# add to list of exclusion which keeps rack of total exclusions
+list_of_exclusion['Excluded Institutions'] = report_only_inst
+list_of_exclusion['Excluded Fund Providers'] = report_only_fp
+list_of_exclusion['Excluded Accounts'] = report_only_inv_acc
 
 # Step 2.5
 ## revenueRates Rate Type Validation
@@ -148,13 +161,6 @@ df_rateTypeBalance['BALANCE_USDE'] = pd.to_numeric(df_rateTypeBalance['BALANCE_U
 # df_rateTypeBalance['BILLING_RATE'] = df_rateTypeBalance['BILLING_RATE'].astype(float)
 #TODO CREATE WAIVER RATE
 df_rateTypeBalance['ESTIMATED_REVENUE'] = (df_rateTypeBalance['BALANCE_USDE'] * df_rateTypeBalance['BILLING_RATE'])
-
-#waiverRate =  0.25
-#df_merged['WAIVER_AMT'] = df_merged['ESTIMATED_REVENUE'] * waiverRate
-#df_merged['EXPECTED_WAIVER_AMT'] = df_merged['ESTIMATED_REVENUE'] - df_merged['WAIVER_AMT']
-
-
-
 # print(df_rateTypeBalance.info())
 # exit()
 
@@ -164,8 +170,13 @@ df_rateTypeBalance['ESTIMATED_REVENUE'] = (df_rateTypeBalance['BALANCE_USDE'] * 
 # print('df_merged_old **')
 # print(df_merged_old.loc[df_merged_old['BALANCE_DT'] == '2021.01.20.00:00:00.000.000'].describe())
 # exit()
-df_merged = df_rateTypeBalance
 
+# fixme check merging
+# merge df_rateTypeBalance and holiday table -> how ="outer" ??
+# df_merged2 = pd.merge(df_rateTypeBalance, df_holiday_table, how= 'outer',
+#                      left_on = ['BALANCE_DT', 'FUND_ID'], right_on = ['HOLIDAY_DATE','FUND_ID'], indicator=False)
+
+df_merged = df_rateTypeBalance
 
 df_merged['BALANCE_USDE'] = pd.to_numeric(df_merged['BALANCE_USDE'])
 # df_merged['RATE'] = pd.to_numeric(df_merged['RATE'])
@@ -193,7 +204,7 @@ df_merged['REVENUE_CATEGORY'] =""
 df_merged.loc[df_merged['COUNTRY_NAME'] != "United States", "COUNTRY_NAME"] = "Offshore"
 df_merged.loc[df_merged['COUNTRY_NAME'] == "United States", "COUNTRY_NAME"] = "Onshore"
 
-#billable cats
+#billable cats. replace certain rate types with custom values
 df_merged.loc[df_merged['RATE_TYPE'] == 'EXT', 'RATE_TYPE'] = "Direct"            #direct
 df_merged.loc[df_merged['RATE_TYPE'] == 'EXT_FULL', 'RATE_TYPE'] = "Direct"            #direct
 df_merged.loc[df_merged['RATE_TYPE'] == 'E_EXT', 'RATE_TYPE'] = "Direct"            #direct
@@ -234,11 +245,11 @@ df_merged.loc[df_merged['RATE_TYPE'] == 'Non Billable', 'REVENUE_CATEGORY'] = "N
 df_merged.loc[df_merged['RATE_TYPE'].isna(), 'REVENUE_CATEGORY'] = "Null Rate Type"
 df_merged.loc[df_merged['RATE_TYPE'] == 'INT_ALT', 'REVENUE_CATEGORY'] = "INT_ALT"
 
-#@TODO Create column waiver waiver rates in preprocessing
-print(df_merged['REVENUE_CATEGORY'].unique())
-print(df_merged['RATE_TYPE_CATEGORY'].unique())
-
-
+#Create column waiver waiver rates in preprocessing
+# print(df_merged['REVENUE_CATEGORY'].unique())
+# print(df_merged['RATE_TYPE_CATEGORY'].unique())
+#
+# exit()
 
 
 # Fund Category Category reclassification
@@ -268,12 +279,16 @@ df_merged = df_merged.loc[df_merged['RATE_TYPE_CATEGORY'] != 'INT_ALT']
 
 df_merged = df_merged.loc[df_merged['RATE_TYPE'] != 'Non Billable']
 
+# add exclusions to list of exclusions
+list_of_exclusion['Excluded Rate Types']= ['INT_ALT', 'Non Billable']
+
 # print(df_merged['RATE_TYPE_CATEGORY'].unique())
 # print(df_merged['RATE_TYPE'].unique())
 # # print(df_merged.loc[df_merged['RATE_TYPE_CATEGORY'] == 'INT_ALT'])
 # exit()
 
 # b. Manual Date exclusions for Holidays
+
 df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-12-25']
 df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-11-25']
 df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2021-11-11']
@@ -297,6 +312,8 @@ df_merged = df_merged.loc[df_merged['BALANCE_DT'] != '2020-09-30']
 df_merged = df_merged.loc[df_merged['INV_INSTITUTION_NAME'] != 'testbank']
 # df_merged = df_merged.loc[df_merged['CB_DESCRIPTION'] != 'Globallink Co-Brand']
 
+# add exclusion to list of exclusions
+list_of_exclusion['Excluded Institutions'].append('testbank')
 
 # Step 7
 # Estimate Revenue and determine number of years based on if current date is in leap year
@@ -304,6 +321,11 @@ if is_leap:
     df_merged['ESTIMATED_REVENUE'] = (df_merged['ESTIMATED_REVENUE'])/366
 else:
     df_merged['ESTIMATED_REVENUE'] = (df_merged['ESTIMATED_REVENUE'])/365
+
+
+#Step 7.5
+#Waiver Rate
+
 
 df_base_bal = df_merged
 # Step 8
@@ -498,7 +520,7 @@ df_bcat_AffiliateSweepNS = df_base_bal.loc[df_base_bal['RATE_TYPE'] == 'Affiliat
 df_bcat_SSgASweep = df_base_bal.loc[df_base_bal['RATE_TYPE'] == 'SSgA Sweep']
 df_bcat_NonBillable = df_base_bal.loc[df_base_bal['RATE_TYPE'] == 'Non Billable']  #*
 df_bcat_NullRateType = df_base_bal.loc[df_base_bal['RATE_TYPE'] == 'Null Rate Type']
-df_bcat_ExWaiver = df_base_bal.loc[df_base_bal['Rate_TYPE'] == 'Expected Waiver Rate']
+
 
 print(df_base_bal['RATE_TYPE'].unique())
 # exit()
@@ -530,8 +552,7 @@ print(df_base_bal['RATE_TYPE'].unique())
 # Step 11
 # Establish foundation and pickle necessary dataframes for use in panel_process.py
 # TODO: pickle this and unpickle it within the panel funciton; split out the panel function to a new file
-#TODO Go over with blake
-df_mdm = pd.concat([df_direct_bal, df_omni_bal, df_int, df_sweep_affilitate, df_sweep_ssga, df_sweep_3rd,])
+df_mdm = pd.concat([df_direct_bal, df_omni_bal, df_int, df_sweep_affilitate, df_sweep_ssga, df_sweep_3rd])
 df_mdm.to_pickle(app_home + "df_mdm.pkl")
 df_direct_bal.to_pickle(app_home + "df_direct_bal.pkl")
 df_omni_bal.to_pickle(app_home + "df_omni_bal.pkl")
@@ -541,7 +562,7 @@ df_sweep_ssga.to_pickle(app_home + "df_sweep_ssga.pkl")
 df_sweep_3rd.to_pickle(app_home + "df_sweep_3rd.pkl")
 
 
-df_mdm_bcat = pd.concat([df_bcat_Portal, df_bcat_3rdPartySweep, df_bcat_AffiliateSweep, df_bcat_AffiliateSweepNS, df_bcat_SSgASweep, df_bcat_NonBillable, df_bcat_NullRateType,])
+df_mdm_bcat = pd.concat([df_bcat_Portal, df_bcat_3rdPartySweep, df_bcat_AffiliateSweep, df_bcat_AffiliateSweepNS, df_bcat_SSgASweep, df_bcat_NonBillable, df_bcat_NullRateType])
 
 df_mdm_bcat.to_pickle(app_home + "df_mdm_bcat.pkl")
 df_bcat_Portal.to_pickle(app_home + "df_bcat_Portal.pkl")
@@ -558,6 +579,8 @@ df_base_volume.to_pickle(app_home + "df_base_volume.pkl")
 print(df_base_bal['BALANCE_USDE'].count())
 print(df_base_bal['BALANCE_USDE'].count())
 print(df_base_bal['BALANCE_USDE'].count())
+print('The following exclusions have been made:')
+print(list_of_exclusion)
 print('pre_processing complete')
 
 exit()
