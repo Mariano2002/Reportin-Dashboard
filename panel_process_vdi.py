@@ -136,7 +136,7 @@ def color_choice(value):
 # Step 1
 # Import Pickled Files
 # running locally. file path specific to user
-app_home = "c:/Users/Aleksander/PycharmProjects/fc-product/data/"
+app_home = "C:/Users/Mariano/PycharmProjects/Pune/fc-product/data/"
 
 # specify file paths to pickle files containing the data
 # df_mdm_import = "df_mdm.pkl"
@@ -2205,16 +2205,13 @@ html_pane11_pdf = pn.pane.HTML("""
 
 # create layout/ display of dashboard for pdf
 gspec_pdf = pn.GridSpec(sizing_mode='stretch_both')
-gspec_pdf[0, :4] = pn.Row(html_pane_pdf, html_pane3_pdf, html_pane4_pdf, align='center')
-gspec_pdf[1, :4] = pn.Row(html_pane8_pdf, html_pane9_pdf, html_pane10_pdf, html_pane11_pdf, align='center')
-gspec_pdf[2, :4] = pn.Row(pn.Column(PBC, billing_cat_multiindex), margin=(-50, 5, 5, 5), max_width=1200,
-                          css_classes=['panel-df'], align='center')
-gspec_pdf[3, :4] = pn.Row(pn.Column(p3), margin=(100, 5, 5, 5), max_width=1200, css_classes=['panel-df'],
+gspec_pdf[0, :4] = pn.Row(pn.Column(pn.Row(html_pane_pdf, html_pane3_pdf, html_pane4_pdf, html_pane8_pdf),pn.Row(billing_cat_multiindex, max_width=1200)), align='center')
+gspec_pdf[1, :4] = pn.Row(pn.Column(p3), margin=(50, 5, 5, 5), max_width=1200, css_classes=['panel-df'],
                           align='center')
-gspec_pdf[4, :4] = pn.Row(function_for_plot, margin=(190, 5, 5, 5), css_classes=['panel-df'], align='center')
-gspec_pdf[5, :4] = pn.Row(function_for_plot_balance, margin=(100, 5, 5, 5), css_classes=['panel-df'], align='center')
-gspec_pdf[6, :4] = pn.Row(top10institutions, margin=(140, 5, 5, 5), css_classes=['panel-df'], align='center')
-gspec_pdf[7, :4] = pn.Row(top10providers, margin=(250, 5, 5, 5), css_classes=['panel-df'], align='center')
+gspec_pdf[2, :4] = pn.Row(function_for_plot, margin=(200, 5, 5, 5), css_classes=['panel-df'], align='center')
+gspec_pdf[3, :4] = pn.Row(function_for_plot_balance, margin=(160, 5, 5, 5), css_classes=['panel-df'], align='center')
+gspec_pdf[4, :4] = pn.Row(top10institutions, margin=(140, 5, 5, 5), css_classes=['panel-df'], align='center')
+gspec_pdf[5, :4] = pn.Row(top10providers, margin=(220, 5, 5, 5), css_classes=['panel-df'], align='center')
 
 # create layout for Providers and Institutions tab
 gspec2 = pn.GridSpec(sizing_mode='stretch_both')
@@ -2261,7 +2258,7 @@ gspec_pdf.save('FC_Dashboard_pdf.html', resources=INLINE, embed=True)
 
 # Pdf generation
 subprocess.call([r"python", "converter.py"] + param1, shell=False)
-
+"""
 # send email containing html and pdf version
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', '--email', action='store_true',
@@ -2359,3 +2356,4 @@ tr:nth-child(even) {
     server = smtplib.SMTP("mail.ny2.eexchange.com")
     server.sendmail(me, rcpt, msg.as_string())
     print("Completed")
+"""
