@@ -19,6 +19,7 @@ from PIL import Image, ImageTk
 import tkinter.ttk as ttk
 import math
 from tkcalendar import DateEntry
+from multiprocessing.pool import ThreadPool, threading
 
 
 password = "12345"
@@ -48,7 +49,7 @@ def switch32():
     mainframe2.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(40,30), pady=(0,0))
 
 def switch34():
-
+    global right_button4
     mainframe3.pack_forget()
 
     mainframe4.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(10,10), pady=(0,0))
@@ -62,7 +63,6 @@ def switch43():
 def get_data():
     filename = filename1
     last_date = DATE1.get()
-    print(last_date)
     with open(filename, encoding='utf-8-sig', newline='') as f:
         reader = csv.reader((line.replace('\0','') for line in f), delimiter=",")
         next(reader)
@@ -83,7 +83,6 @@ def get_data():
 
 def get_data_comp():
     filename = filename5
-    print(scraped_data)
     with open(filename, encoding='utf-8-sig', newline='') as f:
         reader = csv.reader((line.replace('\0','') for line in f), delimiter=",")
         next(reader)
@@ -140,6 +139,7 @@ def scraper():
     download_btn.config(state="disable")
     download_btn2.config(state="disable")
     upload_btn3.config(state="disable")
+    instances.config(state="disable")
     run.config(state="disable")
     csvf3.config(state="disable")
     run.config(bg="orange")
@@ -161,6 +161,7 @@ def scraper():
             download_btn.config(state="normal")
             download_btn2.config(state="normal")
             upload_btn3.config(state="normal")
+            instances.config(state="normal")
             compare.config(state="normal")
             run.config(state="normal")
             csvf3.config(state="normal")
@@ -185,13 +186,14 @@ def scraper():
     # f = open('Output.csv', 'w', newline='', encoding='UTF-8')
     # writer = csv.writer(f)
     # writer.writerow(['Fund Provider', 'Fund Name', 'ISIN', 'Cusip', 'Document Type', 'Link', 'Working', 'Document kind'])
-    options = webdriver.ChromeOptions()
-    options.add_argument("--start-maximized")
-    options.add_argument("--headless")
-    driver = webdriver.Chrome(options=options)
     scraped_data = []
 
-    for i in input_data:
+
+    def main(i):
+        options = webdriver.ChromeOptions()
+        options.add_argument("--start-maximized")
+        options.add_argument("--headless")
+        driver = webdriver.Chrome(options=options)
         driver.get("https://www.google.com/")
         driver.get("https://www.google.com/search?q="+(i['provider']+" "+i['code']).replace(" ","+")+"&oq=Aberdeen+Standard+Investments+LU0779217297&sourceid=chrome&ie=UTF-8")
         c_link = driver.current_url
@@ -241,8 +243,11 @@ def scraper():
         elif i['type'] == 'cusip':
             scraped_data.append({"provider":i['provider'], "name":i['name'], "code":i['code'], "type":"cusip", "document":document, "link":link_m, "working":working, "old_link":"", 'same':"", 'checked':"1"})
         time.sleep(2)
+        driver.quit()
 
-
+    if int(INSTANCES.get()) >= 6:
+        tkMessageBox.showwarning("Warning!", "To use that much instances you need to have a powerful computer and a fast internet connection!")
+    ThreadPool(int(INSTANCES.get())).map(main,input_data)
 
     input_data = []
     csvf1.config(state='normal')
@@ -257,6 +262,7 @@ def scraper():
     download_btn.config(state="normal")
     download_btn2.config(state="normal")
     upload_btn3.config(state="normal")
+    instances.config(state="normal")
     compare.config(state="normal")
     run.config(state="normal")
     csvf3.config(state="normal")
@@ -431,6 +437,7 @@ if __name__ == '__main__':
     left_button1 = Button(mainframe1, image=photo21, border=0)
     left_button1.config(bg="#3399ff")
     left_button1.place(x=530, y=570) #CHANGE duhet 725
+    left_button1.config(state='disable')
 
     canvas = Canvas(mainframe1, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="gray55")
@@ -451,7 +458,7 @@ if __name__ == '__main__':
 
 
     def DisplayData1():
-        global color_number, checked_or_not
+        global color_number, checked_or_not, pages_nr
         color_number = True
         checked_or_not = True
         fetch = []
@@ -477,11 +484,16 @@ if __name__ == '__main__':
             else:
                 tree1.insert('', 'end', values=(data),)
                 color_number = True
+        pages_nr = math.ceil(len(tree1.get_children())/14)
+        if pages_nr == 0:
+            lblx.config(text = "Page {} of {}".format(0, pages_nr))
+        else:
+            lblx.config(text = "Page {} of {}".format(c_page, pages_nr))
 
-
+        if len(tree1.get_children()) < 15:
+            right_button2_tr.config(state='disable')
     def live_edit(event):
         global entryedit
-        print(1)
         try:
             entryedit.destroy()
         except:
@@ -499,15 +511,12 @@ if __name__ == '__main__':
             return
         item = tree1.selection()[0]
         item_text = tree1.item(item, "values")[int(column.replace("#",""))-1]
-        print(item)
         tree1.see(item)
         entryedit = Text(mainframe2)
         entryedit.insert("1.0", item_text)
         if rrites1 == False:
             index_number = tree1.index(item)-place1
         else:
-            print(tree1.index(item))
-            print(place1)
             if grow1 == False:
                 nr_fundit = len(tree1.get_children())-1
                 nr_fundit_i_bllokut_fundit = place1-14
@@ -515,7 +524,6 @@ if __name__ == '__main__':
                 index_number = tree1.index(item)-(place1-27+diferenca)
             else:
                 index_number = tree1.index(item)-(place1-13)
-        print(index_number)
         entryedit.place(x=x_long, y=75+index_number*30, width=n_width, height=30)
         entryedit.focus()
 
@@ -623,58 +631,100 @@ if __name__ == '__main__':
     def scrollwheel(event):
         return 'break'
     tree1.bind('<MouseWheel>', scrollwheel)
-
+    c_page = 1
+    pages_nr = math.ceil(len(tree1.get_children())/14)
     place1 = 0
     rrites1 = False
     grow1 = True
+
+
     def move_back1():
-        global place1, rrites1, grow1
+        global place1, rrites1, grow1, c_page, pages_nr
         grow1 = True
         if place1 != 0:
+            c_page -= 1
+            pages_nr = math.ceil(len(tree1.get_children())/14)
+            if pages_nr == 0:
+                lblx.config(text = "Page {} of {}".format(0, pages_nr))
+            else:
+                lblx.config(text = "Page {} of {}".format(c_page, pages_nr))
             if rrites1 == True:
                 place1 -= 27
                 rrites1 = False
             else:
                 place1 -= 14
 
+        if place1 == 0:
+            left_button2_tr.config(state='disable')
+
         tree1.see(tree1.get_children()[place1])
-        print(rrites1)
-        print(place1)
+        pages_nr = math.ceil(len(tree1.get_children()) / 14)
+        if c_page == pages_nr:
+            right_button2_tr.config(state='disable')
+        else:
+            right_button2_tr.config(state='normal')
 
 
     def move_for1():
-        global place1, rrites1, grow1
+        global place1, rrites1, grow1, c_page
+        print(grow1)
+        left_button2_tr.config(state='normal')
         if grow1 == True:
+            c_page += 1
+            pages_nr = math.ceil(len(tree1.get_children())/14)
+            if pages_nr == 0:
+                lblx.config(text = "Page {} of {}".format(0, pages_nr))
+            else:
+                lblx.config(text = "Page {} of {}".format(c_page, pages_nr))
+
             if rrites1 == False:
                 place1 += 27
                 rrites1 = True
             else:
                 place1 += 14
         try:
+            print(place1)
             tree1.see(tree1.get_children()[place1])
             if place1 == len(tree1.get_children())-1:
                 grow1 = False
+
         except:
             tree1.see(tree1.get_children()[-1])
-            print(len(tree1.get_children()))
             grow1 = False
-        print(rrites1)
-        print(place1)
 
-    image12_tr = Image.open("right.png")
+        pages_nr = math.ceil(len(tree1.get_children()) / 14)
+        if c_page == pages_nr:
+            right_button2_tr.config(state='disable')
+        else:
+            right_button2_tr.config(state='normal')
+        if pages_nr == 0:
+            lblx.config(text = "Page {} of {}".format(0, pages_nr))
+        else:
+            lblx.config(text = "Page {} of {}".format(c_page, pages_nr))
+
+    image12_tr = Image.open("arrow_r.png")
     image12_tr = image12_tr.resize((25, 25), Image.ANTIALIAS)
     image12_tr = ImageTk.PhotoImage(image12_tr)
     right_button2_tr = Button(mainframe2, image=image12_tr, border=0, command=move_for1)
     right_button2_tr.config(bg="#3399ff")
     right_button2_tr.place(x=570, y=500) #CHANGE duhet 725
 
-    image22_tr = Image.open("left.png")
+    image22_tr = Image.open("arrow_r.png")
     image22_tr = image22_tr.resize((25, 25), Image.ANTIALIAS)
+    image22_tr = image22_tr.transpose(Image.FLIP_LEFT_RIGHT)
     image22_tr = ImageTk.PhotoImage(image22_tr)
     left_button2_tr = Button(mainframe2, image=image22_tr, border=0, command=move_back1)
     left_button2_tr.config(bg="#3399ff")
     left_button2_tr.place(x=530, y=500) #CHANGE duhet 725
+    left_button2_tr.config(state='disable')
 
+
+    if pages_nr == 0:
+        lblx = Label(mainframe2, bg='#3399ff', text="Page {} of {}".format(0, pages_nr), font=('arial', 11), bd=2)
+    else:
+        lblx = Label(mainframe2, bg='#3399ff', text="Page {} of {}".format(c_page, pages_nr), font=('arial', 11), bd=2)
+
+    lblx.place(x=522, y=525)
     DisplayData1()
 
     def UploadAction2(event=None):
@@ -697,19 +747,24 @@ if __name__ == '__main__':
 
 
     def new_row():
-        global color_number
-        do = 1
-        if(do == 1):
-            if color_number == True:
-                tree1.insert('', len(tree1.get_children()), values=("", "", "", ""), tags=('gr',))
-                color_number = False
-            else:
-                tree1.insert('', len(tree1.get_children()), values=("", "", "", ""))
-                color_number = True
-            tree1.update()
-            child_id = tree1.get_children()[-1]
-            tree1.selection_set(child_id)
-
+        global color_number, pages_nr, grow1
+        pages_nr = math.ceil((len(tree1.get_children())+1)/14)
+        if pages_nr == 0:
+            lblx.config(text = "Page {} of {}".format(0, pages_nr))
+        else:
+            lblx.config(text = "Page {} of {}".format(c_page, pages_nr))
+        if len(tree1.get_children())+1 > 14:
+            right_button2_tr.config(state='normal')
+        if color_number == True:
+            tree1.insert('', len(tree1.get_children()), values=("", "", "", ""), tags=('gr',))
+            color_number = False
+        else:
+            tree1.insert('', len(tree1.get_children()), values=("", "", "", ""))
+            color_number = True
+        tree1.update()
+        child_id = tree1.get_children()[-1]
+        tree1.selection_set(child_id)
+        grow1 = True
     add_btn2 = Button(mainframe2, text='Add Website', width=20, command=new_row)
     add_btn2.place(x=980, y=515) #CHANGE duhet 625
     add_btn2.config(bg="LightBlue1")
@@ -764,7 +819,7 @@ if __name__ == '__main__':
     filename3 = None
     filename4 = None
     filename5 = None
-
+    INSTANCES = StringVar()
 
 
     lbl = Label(mainframe3, bg='#3399ff', text="Additional Functions", font=('arial', 11), bd=10)
@@ -897,6 +952,14 @@ if __name__ == '__main__':
     upload_btn3.place(x=560, y=90)
     upload_btn3.config(bg="LightBlue1")
 
+    lbl_instances = Label(mainframe3, bg='#3399ff', text="Instances:", font=('arial', 12), bd=10)
+    lbl_instances.place(x=465, y=140)
+    instances_nr = [1,2,3,4,5,6,7,8,9,10]
+    instances = OptionMenu(mainframe3, INSTANCES, *instances_nr)
+    instances.config(width=2)
+    instances.place(x=565, y=145)
+    INSTANCES.set(instances_nr[0])
+
 
     run = Button(mainframe3, text="Run Scraper", width=20, height=2, bg="#009ACD", command=start)
     run.config(bg="LightBlue1")
@@ -920,9 +983,9 @@ if __name__ == '__main__':
             filename5 = None
 
     lbl_csvf3 = Label(mainframe3, bg='#3399ff', text="Input file", font=('arial', 12), bd=10)
-    lbl_csvf3.place(x=375, y=320)
+    lbl_csvf3.place(x=325, y=320)
     csvf3 = Button(mainframe3, text='Select file', width=38, command=UploadAction5)
-    csvf3.place(x=450, y=325)
+    csvf3.place(x=410, y=325)
 
 
 
@@ -1020,6 +1083,11 @@ if __name__ == '__main__':
                     tree2.insert('', 'end', values=(data),)
                 color_number = True
 
+        pages_nr2 = math.ceil(len(tree2.get_children())/14)
+        if pages_nr2 == 0:
+            lblx2.config(text = "Page {} of {}".format(0, pages_nr2))
+        else:
+            lblx2.config(text = "Page {} of {}".format(c_page2, pages_nr2))
 
     def fixed_map(option):
         return [elm for elm in style.map("Treeview", query_opt=option)
@@ -1041,21 +1109,16 @@ if __name__ == '__main__':
         x_long = 0
         for i in range(0,int(column.replace("#",""))):
             x_long = x_long + tree2.column(cols[i], 'width')
-        print(1)
         if(row == ""):
             return
-        print(2)
         item = tree2.selection()[0]
         item_text = tree2.item(item, "values")[int(column.replace("#",""))-1]
-        print(item)
         tree2.see(item)
         entryedit2 = Text(mainframe4)
         entryedit2.insert("1.0", item_text)
         if rrites2 == False:
             index_number = tree2.index(item)-place2
         else:
-            print(tree2.index(item))
-            print(place2)
             if grow2 == False:
                 nr_fundit = len(tree2.get_children())-1
                 nr_fundit_i_bllokut_fundit = place2-14
@@ -1063,7 +1126,6 @@ if __name__ == '__main__':
                 index_number = tree2.index(item)-(place2-27+diferenca)
             else:
                 index_number = tree2.index(item)-(place2-13)
-        print(index_number)
         entryedit2.place(x=x_long, y=75+index_number*30, width=n_width, height=30)
         entryedit2.focus()
 
@@ -1143,7 +1205,6 @@ if __name__ == '__main__':
             childrens.append(tree2.item(child)["values"])
         tree2.delete(*tree2.get_children())
         for child in childrens:
-            print(child)
             child[9] = 1
             if color_number == True:
                 tree2.insert('', 'end', values=(child), tags=('gr',),)
@@ -1163,7 +1224,6 @@ if __name__ == '__main__':
             childrens.append(tree2.item(child)["values"])
         tree2.delete(*tree2.get_children())
         for child in childrens:
-            print(child)
             child[9] = 0
 
             if color_number == True:
@@ -1266,27 +1326,47 @@ if __name__ == '__main__':
         return 'break'
     tree2.bind('<MouseWheel>', scrollwheel)
 
+    c_page2 = 1
+    pages_nr2 = math.ceil(len(tree2.get_children())/14)
     place2 = 0
     rrites2 = False
     grow2 = True
     def move_back2():
-        global place2, rrites2, grow2
+        global place2, rrites2, grow2, c_page2, pages_nr2
         grow2 = True
         if place2 != 0:
+            c_page2 -= 1
+            pages_nr2 = math.ceil(len(tree2.get_children())/14)
+            if pages_nr2 == 0:
+                lblx2.config(text = "Page {} of {}".format(0, pages_nr2))
+            else:
+                lblx2.config(text = "Page {} of {}".format(c_page2, pages_nr2))
             if rrites2 == True:
                 place2 -= 27
                 rrites2 = False
             else:
                 place2 -= 14
 
-        tree2.see(tree2.get_children()[place2])
-        print(rrites2)
-        print(place2)
+        if place2 == 0:
+            left_button4_tr.config(state='disable')
 
+        tree2.see(tree2.get_children()[place2])
+        pages_nr2 = math.ceil(len(tree2.get_children()) / 14)
+        if c_page2 == pages_nr2:
+            right_button4_tr.config(state='disable')
+        else:
+            right_button4_tr.config(state='normal')
 
     def move_for2():
-        global place2, rrites2, grow2
+        global place2, rrites2, grow2, c_page2, pages_nr2
+        left_button4_tr.config(state='normal')
         if grow2 == True:
+            c_page2 += 1
+            pages_nr2 = math.ceil(len(tree2.get_children())/14)
+            if pages_nr2 == 0:
+                lblx2.config(text = "Page {} of {}".format(0, pages_nr2))
+            else:
+                lblx2.config(text = "Page {} of {}".format(c_page2, pages_nr2))
             if rrites2 == False:
                 place2 += 27
                 rrites2 = True
@@ -1298,26 +1378,39 @@ if __name__ == '__main__':
                 grow2 = False
         except:
             tree2.see(tree2.get_children()[-1])
-            print(len(tree2.get_children()))
             grow2 = False
-        print(rrites2)
-        print(place2)
+        pages_nr2 = math.ceil(len(tree2.get_children()) / 14)
+        if c_page2 == pages_nr2:
+            right_button4_tr.config(state='disable')
+        else:
+            right_button4_tr.config(state='normal')
+        if pages_nr2 == 0:
+            lblx2.config(text = "Page {} of {}".format(0, pages_nr2))
+        else:
+            lblx2.config(text = "Page {} of {}".format(c_page2, pages_nr2))
 
-    image14_tr = Image.open("right.png")
+
+    image14_tr = Image.open("arrow_r.png")
     image14_tr = image14_tr.resize((25, 25), Image.ANTIALIAS)
     image14_tr = ImageTk.PhotoImage(image14_tr)
     right_button4_tr = Button(mainframe4, image=image14_tr, border=0, command=move_for2)
     right_button4_tr.config(bg="#3399ff")
     right_button4_tr.place(x=600, y=500) #CHANGE duhet 725
 
-    image24_tr = Image.open("left.png")
+    image24_tr = Image.open("arrow_r.png")
     image24_tr = image24_tr.resize((25, 25), Image.ANTIALIAS)
+    image24_tr = image24_tr.transpose(Image.FLIP_LEFT_RIGHT)
     image24_tr = ImageTk.PhotoImage(image24_tr)
     left_button4_tr = Button(mainframe4, image=image24_tr, border=0, command=move_back2)
     left_button4_tr.config(bg="#3399ff")
     left_button4_tr.place(x=560, y=500) #CHANGE duhet 725
+    left_button4_tr.config(state='disable')
 
-
+    if pages_nr2 == 0:
+        lblx2 = Label(mainframe4, bg='#3399ff', text="Page {} of {}".format(0, pages_nr2), font=('arial', 11), bd=2)
+    else:
+        lblx2 = Label(mainframe4, bg='#3399ff', text="Page {} of {}".format(c_page2, pages_nr2), font=('arial', 11), bd=2)
+    lblx2.place(x=552, y=525)
 
     def save2():
         f = open('Output.csv', 'w', newline='', encoding='UTF-8')
@@ -1326,7 +1419,6 @@ if __name__ == '__main__':
 
         for child in tree2.get_children():
             lista = tree2.item(child)["values"][:8]
-            print(tree2.item(child)["values"])
             for nr,i in enumerate(lista):
                 lista[nr] = str(i)
             if tree2.item(child)["values"][9] == 0 or lista[5] == "":
@@ -1376,6 +1468,7 @@ if __name__ == '__main__':
     left_button4.config(bg="#3399ff")
     left_button4.place(x=560, y=570) #CHANGE duhet 725
 
+    right_button4.config(state='disable')
     canvas = Canvas(mainframe4, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
     canvas.create_rectangle(12, 0, 22, 10, outline="#3399ff", fill="black")
