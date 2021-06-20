@@ -328,15 +328,14 @@ if __name__ == '__main__':
     csvf1 = Button(mainframe1, text='Select file', width=38, command=UploadAction1)
     csvf1.grid(row=0, column=1, pady=(25,0), sticky=W)
 
-
-
-    wiki = Label(root, borderwidth=.5, relief="solid", text="Explaining TEXT")
-    wiki.place(x=460, y=15, in_=mainframe1)
-    wiki.lower()
+    info1 = Label(root, borderwidth=.5, relief="solid", text="Please provide the Allfunds list as found on Fund \nConnect admin as an import file.")
+    info1.place(x=475, y=30, in_=mainframe1)
+    info1.lower()
     def on_enter1(event):
-        wiki.lift()
+        info1.lift()
     def on_leave1(enter):
-        wiki.lower(mainframe1)
+        info1.lower(mainframe1)
+
     image_info = Image.open("info.png")
     image_info = image_info.resize((15, 15), Image.ANTIALIAS)
     image_info = ImageTk.PhotoImage(image_info)
@@ -353,7 +352,18 @@ if __name__ == '__main__':
     lbl_date1.grid(row=1, sticky=W)
     date1 = DateEntry(mainframe1, bg='white', textvariable=DATE1, font=('arial', 12), width=28, date_pattern='mm/dd/yyyy')  # custom formatting
     date1.grid(row=1, column=1, sticky=W)
-
+    info2 = Label(root, borderwidth=.5, relief="solid", text="Select the effective date for the allfunds list for the \nscraper to only check the URLs of currently active \nfunds.")
+    info2.place(x=475, y=60, in_=mainframe1)
+    info2.lower()
+    def on_enter2(event):
+        info2.lift()
+    def on_leave2(enter):
+        info2.lower(mainframe1)
+    btn_info2 = Label(mainframe1, image=image_info, border=0)
+    btn_info2.config(bg="#3399ff")
+    btn_info2.place(x=450, y=77.5)
+    btn_info2.bind("<Enter>", on_enter2)
+    btn_info2.bind("<Leave>", on_leave2)
 
 
     lbl_pdf = Label(mainframe1, bg='#3399ff', text="Scrape PDF's", font=('arial', 12), bd=10)
@@ -368,6 +378,18 @@ if __name__ == '__main__':
     lbl = Label(mainframe1, bg='#3399ff', text="Manually add funds to Scraper", font=('arial', 12), bd=10)
     lbl.grid(row=4,columnspan=50, sticky=W)
 
+    info3 = Label(root, borderwidth=.5, relief="solid", text="In case you manually want to add Funds \nthat are supposed to be scraped. \nAlternatively this can be done editing.")
+    info3.place(x=265, y=210, in_=mainframe1)
+    info3.lower()
+    def on_enter3(event):
+        info3.lift()
+    def on_leave3(enter):
+        info3.lower(mainframe1)
+    btn_info3 = Label(mainframe1, image=image_info, border=0)
+    btn_info3.config(bg="#3399ff")
+    btn_info3.place(x=235, y=227.5)
+    btn_info3.bind("<Enter>", on_enter3)
+    btn_info3.bind("<Leave>", on_leave3)
 
     lbl_name = Label(mainframe1, bg='#3399ff', text="Provider Name:", font=('arial', 12), bd=10)
     lbl_name.grid(row=5, sticky=W)
@@ -455,6 +477,18 @@ if __name__ == '__main__':
 
     lbl = Label(mainframe2, bg='#3399ff', text="Check Fund Provider Website Whitelist", font=('arial', 10), bd=11)
     lbl.place(x=-5, y=0)
+    info4 = Label(root, borderwidth=.5, relief="solid", text="This whitelist is used to ensure that the scraper can only check websites of our current fund \nproviders and should be check and updated accordingly to our current list of fund providers. \nYou can either use the arrow keys to edit things inside of the scraper or the whitelist.csv.")
+    info4.place(x=275, y=0, in_=mainframe2)
+    info4.lower()
+    def on_enter4(event):
+        info4.lift()
+    def on_leave4(enter):
+        info4.lower(mainframe2)
+    btn_info4 = Label(mainframe2, image=image_info, border=0)
+    btn_info4.config(bg="#3399ff")
+    btn_info4.place(x=250, y=12.5)
+    btn_info4.bind("<Enter>", on_enter4)
+    btn_info4.bind("<Leave>", on_leave4)
 
 
     def DisplayData1():
@@ -824,6 +858,18 @@ if __name__ == '__main__':
 
     lbl = Label(mainframe3, bg='#3399ff', text="Additional Functions", font=('arial', 11), bd=10)
     lbl.place(x=470, y=0)
+    info5 = Label(root, borderwidth=.5, relief="solid", text="This page allows you to easily access some core functionalities of the verification tool. After \nyou uploaded the allfund list and selected the effective date and made sure that the whitelist \nis up to date run the scraper.")
+    info5.place(x=650, y=0, in_=mainframe3)
+    info5.lower()
+    def on_enter5(event):
+        info5.lift()
+    def on_leave5(enter):
+        info5.lower(mainframe3)
+    btn_info5 = Label(mainframe3, image=image_info, border=0)
+    btn_info5.config(bg="#3399ff")
+    btn_info5.place(x=625, y=12.5)
+    btn_info5.bind("<Enter>", on_enter5)
+    btn_info5.bind("<Leave>", on_leave5)
 
 
     def UploadAction3(event=None):
@@ -997,6 +1043,18 @@ if __name__ == '__main__':
     compare.config(bg="LightBlue1")
     compare.place(x=475, y=375)
     compare.config(state="disabled")
+    info6 = Label(root, borderwidth=.5, relief="solid", text="After the scraper is completed this won't be greyed out anymore, download the \ncomparison file from argon with GetFundDocuments and compare the current \ndocuments on fund connect to the scraper results.")
+    info6.place(x=670, y=372, in_=mainframe3)
+    info6.lower()
+    def on_enter6(event):
+        info6.lift()
+    def on_leave6(enter):
+        info6.lower(mainframe3)
+    btn_info6 = Label(mainframe3, image=image_info, border=0)
+    btn_info6.config(bg="#3399ff")
+    btn_info6.place(x=645, y=387)
+    btn_info6.bind("<Enter>", on_enter6)
+    btn_info6.bind("<Leave>", on_leave6)
 
     lbl = Label(mainframe3, bg='#3399ff', text="Click to next view after compare ran", font=('arial', 10), bd=10)
     lbl.place(x=450, y=510)
@@ -1314,7 +1372,18 @@ if __name__ == '__main__':
     btn_locked = Button(mainframe4, image=image_lock, border=0, command=un_lock)
     btn_locked.config(bg="#3399ff")
     btn_locked.place(x=10, y=10)
-
+    info7 = Label(root, borderwidth=.5, relief="solid", text="Use the password to enable the edeting of the results. This can also be done on the CSV in \ncase you are allowed to do so. Check the matching Yes No columns to spot discrepencies \nbetween Fund Connect and the results of the verification tool.")
+    info7.place(x=80, y=0, in_=mainframe4)
+    info7.lower()
+    def on_enter7(event):
+        info7.lift()
+    def on_leave7(enter):
+        info7.lower(mainframe4)
+    btn_info7 = Label(mainframe4, image=image_info, border=0)
+    btn_info7.config(bg="#3399ff")
+    btn_info7.place(x=50, y=17)
+    btn_info7.bind("<Enter>", on_enter7)
+    btn_info7.bind("<Leave>", on_leave7)
 
 
 
