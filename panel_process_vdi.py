@@ -2039,6 +2039,16 @@ html_paneh = pn.pane.HTML("""
                           style={'background-color': '#0a2f5d', 'color': 'white', 'border': '2px solid black',
                                  'border-radius': '5px', 'font-size': '16px', 'height': '265px'}, width_policy='max')
 
+html_paneh_pdf = pn.pane.HTML("""
+
+<figure>
+<p style= "font-size:12px; text-align: right;"> <img src="https://www.fundconnectportal.com/assets/logo-light.svg" align="left" class="logo_light"> Data is as of : {latest_dt_str} </p>
+</figure>
+
+""".format(latest_dt_str=latest_dt_str),
+                          style={'background-color': '#0a2f5d', 'color': 'white', 'border': '2px solid black',
+                                 'border-radius': '5px', 'font-size': '16px', 'height': '265px'}, width_policy='max')
+
 html_paneh2 = pn.pane.HTML("""
 
 <figure>
@@ -2205,13 +2215,16 @@ html_pane11_pdf = pn.pane.HTML("""
 
 # create layout/ display of dashboard for pdf
 gspec_pdf = pn.GridSpec(sizing_mode='stretch_both')
-gspec_pdf[0, :4] = pn.Row(pn.Column(pn.Row(html_pane_pdf, html_pane3_pdf, html_pane4_pdf, html_pane8_pdf),pn.Row(billing_cat_multiindex, max_width=1200)), align='center')
-gspec_pdf[1, :4] = pn.Row(pn.Column(p3), margin=(50, 5, 5, 5), max_width=1200, css_classes=['panel-df'],
+gspec_pdf[0, :4] = pn.Row(html_paneh_pdf, margin=5, max_height=60, align='center')
+gspec_pdf[1, :4] = pn.Row(html_pane_pdf, html_pane3_pdf, html_pane4_pdf, html_pane8_pdf, align='center')
+gspec_pdf[2, :4] = pn.Row(pn.Column(billing_cat_multiindex), margin=(50, 5, 5, 5), max_width=1200,
+                          css_classes=['panel-df'], align='center')
+gspec_pdf[3, :4] = pn.Row(pn.Column(p3), margin=(100, 5, 5, 5), max_width=1200, css_classes=['panel-df'],
                           align='center')
-gspec_pdf[2, :4] = pn.Row(function_for_plot, margin=(200, 5, 5, 5), css_classes=['panel-df'], align='center')
-gspec_pdf[3, :4] = pn.Row(function_for_plot_balance, margin=(160, 5, 5, 5), css_classes=['panel-df'], align='center')
-gspec_pdf[4, :4] = pn.Row(top10institutions, margin=(140, 5, 5, 5), css_classes=['panel-df'], align='center')
-gspec_pdf[5, :4] = pn.Row(top10providers, margin=(220, 5, 5, 5), css_classes=['panel-df'], align='center')
+gspec_pdf[4, :4] = pn.Row(function_for_plot, margin=(220, 5, 5, 5), css_classes=['panel-df'], align='center')
+gspec_pdf[5, :4] = pn.Row(function_for_plot_balance, margin=(50, 5, 5, 5), css_classes=['panel-df'], align='center')
+gspec_pdf[6, :4] = pn.Row(top10institutions, margin=(180, 5, 5, 5), css_classes=['panel-df'], align='center')
+gspec_pdf[7, :4] = pn.Row(top10providers, margin=(300, 5, 5, 5), css_classes=['panel-df'], align='center')
 
 # create layout for Providers and Institutions tab
 gspec2 = pn.GridSpec(sizing_mode='stretch_both')
