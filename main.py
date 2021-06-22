@@ -245,8 +245,8 @@ def scraper():
         time.sleep(2)
         driver.quit()
 
-    if int(INSTANCES.get()) >= 6:
-        tkMessageBox.showwarning("Warning!", "To use that much instances you need to have a powerful computer and a fast internet connection!")
+    if int(INSTANCES.get()) > 15:
+        tkMessageBox.showwarning("Warning!", "To use that many instances you need to have a powerful computer and a fast internet connection!")
     ThreadPool(int(INSTANCES.get())).map(main,input_data)
 
     input_data = []
@@ -273,7 +273,8 @@ def start():
     thread = Thread(target=scraper)
     thread.start()
 
-
+def nothing():
+    return
 
 
 if __name__ == '__main__':
@@ -459,7 +460,11 @@ if __name__ == '__main__':
     left_button1 = Button(mainframe1, image=photo21, border=0)
     left_button1.config(bg="#3399ff")
     left_button1.place(x=530, y=570) #CHANGE duhet 725
-    left_button1.config(state='disable')
+
+    image_left_gray = Image.open("left_GRAY.png")
+    image_left_gray = image_left_gray.resize((25, 25), Image.ANTIALIAS)
+    image_left_gray = ImageTk.PhotoImage(image_left_gray)
+    left_button1.config(image=image_left_gray)
 
     canvas = Canvas(mainframe1, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="gray55")
@@ -525,7 +530,8 @@ if __name__ == '__main__':
             lblx.config(text = "Page {} of {}".format(c_page, pages_nr))
 
         if len(tree1.get_children()) < 15:
-            right_button2_tr.config(state='disable')
+            right_button2_tr.config(image=image12_tr_gray)
+            right_button2_tr.config(command=nothing)
     def live_edit(event):
         global entryedit
         try:
@@ -689,20 +695,28 @@ if __name__ == '__main__':
                 place1 -= 14
 
         if place1 == 0:
-            left_button2_tr.config(state='disable')
+
+            left_button2_tr.config(image=image22_tr_gray)
+            left_button2_tr.config(command=nothing)
 
         tree1.see(tree1.get_children()[place1])
         pages_nr = math.ceil(len(tree1.get_children()) / 14)
         if c_page == pages_nr:
-            right_button2_tr.config(state='disable')
+
+            right_button2_tr.config(image=image12_tr_gray)
+            right_button2_tr.config(command=nothing)
         else:
-            right_button2_tr.config(state='normal')
+
+            right_button2_tr.config(image=image12_tr)
+            right_button2_tr.config(command=move_for1)
 
 
     def move_for1():
         global place1, rrites1, grow1, c_page
         print(grow1)
-        left_button2_tr.config(state='normal')
+
+        left_button2_tr.config(image=image22_tr)
+        left_button2_tr.config(command=move_back1)
         if grow1 == True:
             c_page += 1
             pages_nr = math.ceil(len(tree1.get_children())/14)
@@ -728,9 +742,13 @@ if __name__ == '__main__':
 
         pages_nr = math.ceil(len(tree1.get_children()) / 14)
         if c_page == pages_nr:
-            right_button2_tr.config(state='disable')
+
+            right_button2_tr.config(image=image12_tr_gray)
+            right_button2_tr.config(command=nothing)
         else:
-            right_button2_tr.config(state='normal')
+
+            right_button2_tr.config(image=image12_tr)
+            right_button2_tr.config(command=move_for1)
         if pages_nr == 0:
             lblx.config(text = "Page {} of {}".format(0, pages_nr))
         else:
@@ -739,6 +757,9 @@ if __name__ == '__main__':
     image12_tr = Image.open("arrow_r.png")
     image12_tr = image12_tr.resize((25, 25), Image.ANTIALIAS)
     image12_tr = ImageTk.PhotoImage(image12_tr)
+    image12_tr_gray = Image.open("arrow_r_GRAY.png")
+    image12_tr_gray = image12_tr_gray.resize((25, 25), Image.ANTIALIAS)
+    image12_tr_gray = ImageTk.PhotoImage(image12_tr_gray)
     right_button2_tr = Button(mainframe2, image=image12_tr, border=0, command=move_for1)
     right_button2_tr.config(bg="#3399ff")
     right_button2_tr.place(x=570, y=500) #CHANGE duhet 725
@@ -747,10 +768,16 @@ if __name__ == '__main__':
     image22_tr = image22_tr.resize((25, 25), Image.ANTIALIAS)
     image22_tr = image22_tr.transpose(Image.FLIP_LEFT_RIGHT)
     image22_tr = ImageTk.PhotoImage(image22_tr)
+    image22_tr_gray = Image.open("arrow_r_GRAY.png")
+    image22_tr_gray = image22_tr_gray.resize((25, 25), Image.ANTIALIAS)
+    image22_tr_gray = image22_tr_gray.transpose(Image.FLIP_LEFT_RIGHT)
+    image22_tr_gray = ImageTk.PhotoImage(image22_tr_gray)
     left_button2_tr = Button(mainframe2, image=image22_tr, border=0, command=move_back1)
     left_button2_tr.config(bg="#3399ff")
     left_button2_tr.place(x=530, y=500) #CHANGE duhet 725
-    left_button2_tr.config(state='disable')
+
+    left_button2_tr.config(image=image22_tr_gray)
+    left_button2_tr.config(command=nothing)
 
 
     if pages_nr == 0:
@@ -788,7 +815,9 @@ if __name__ == '__main__':
         else:
             lblx.config(text = "Page {} of {}".format(c_page, pages_nr))
         if len(tree1.get_children())+1 > 14:
-            right_button2_tr.config(state='normal')
+
+            right_button2_tr.config(image=image12_tr)
+            right_button2_tr.config(command=move_for1)
         if color_number == True:
             tree1.insert('', len(tree1.get_children()), values=("", "", "", ""), tags=('gr',))
             color_number = False
@@ -1000,7 +1029,7 @@ if __name__ == '__main__':
 
     lbl_instances = Label(mainframe3, bg='#3399ff', text="Instances:", font=('arial', 12), bd=10)
     lbl_instances.place(x=465, y=140)
-    instances_nr = [1,2,3,4,5,6,7,8,9,10]
+    instances_nr = [5,10,15,20,25,30]
     instances = OptionMenu(mainframe3, INSTANCES, *instances_nr)
     instances.config(width=2)
     instances.place(x=565, y=145)
@@ -1091,7 +1120,7 @@ if __name__ == '__main__':
 
     def DisplayData2():
         global color_number, checked_or_not2
-
+        print("got here")
         tree2.delete(*tree2.get_children())
         color_number = True
         checked_or_not2 = True
@@ -1146,6 +1175,14 @@ if __name__ == '__main__':
             lblx2.config(text = "Page {} of {}".format(0, pages_nr2))
         else:
             lblx2.config(text = "Page {} of {}".format(c_page2, pages_nr2))
+
+        if len(tree2.get_children()) < 15:
+            right_button4_tr.config(image=image14_tr_gray)
+            right_button4_tr.config(command=nothing)
+        else:
+            right_button4_tr.config(image=image14_tr)
+            right_button4_tr.config(command=move_for2)
+
 
     def fixed_map(option):
         return [elm for elm in style.map("Treeview", query_opt=option)
@@ -1340,7 +1377,7 @@ if __name__ == '__main__':
     tree2.column('#9', stretch=NO, minwidth=0, width=170)
     tree2.column('#10', stretch=NO, minwidth=0, width=75)
     tree2.column('#11', stretch=NO, minwidth=0, width=0)
-    tree2.column('#12', stretch=NO, minwidth=0, width=80)
+    tree2.column('#12', stretch=NO, minwidth=0, width=78)
     tree2.pack(side=BOTTOM, fill=X, pady=(50,103))
     def nothing():
         return
@@ -1417,18 +1454,22 @@ if __name__ == '__main__':
                 place2 -= 14
 
         if place2 == 0:
-            left_button4_tr.config(state='disable')
+            left_button4_tr.config(image=image24_tr_gray)
+            left_button4_tr.config(command=nothing)
 
         tree2.see(tree2.get_children()[place2])
         pages_nr2 = math.ceil(len(tree2.get_children()) / 14)
         if c_page2 == pages_nr2:
-            right_button4_tr.config(state='disable')
+            right_button4_tr.config(image=image14_tr_gray)
+            right_button4_tr.config(command=nothing)
         else:
-            right_button4_tr.config(state='normal')
+            right_button4_tr.config(image=image14_tr)
+            right_button4_tr.config(command=move_for2)
 
     def move_for2():
         global place2, rrites2, grow2, c_page2, pages_nr2
-        left_button4_tr.config(state='normal')
+        left_button4_tr.config(image=image24_tr)
+        left_button4_tr.config(command=move_back2)
         if grow2 == True:
             c_page2 += 1
             pages_nr2 = math.ceil(len(tree2.get_children())/14)
@@ -1450,9 +1491,11 @@ if __name__ == '__main__':
             grow2 = False
         pages_nr2 = math.ceil(len(tree2.get_children()) / 14)
         if c_page2 == pages_nr2:
-            right_button4_tr.config(state='disable')
+            right_button4_tr.config(image=image14_tr_gray)
+            right_button4_tr.config(command=nothing)
         else:
-            right_button4_tr.config(state='normal')
+            right_button4_tr.config(image=image14_tr)
+            right_button4_tr.config(command=move_for2)
         if pages_nr2 == 0:
             lblx2.config(text = "Page {} of {}".format(0, pages_nr2))
         else:
@@ -1462,18 +1505,28 @@ if __name__ == '__main__':
     image14_tr = Image.open("arrow_r.png")
     image14_tr = image14_tr.resize((25, 25), Image.ANTIALIAS)
     image14_tr = ImageTk.PhotoImage(image14_tr)
+    image14_tr_gray = Image.open("arrow_r_GRAY.png")
+    image14_tr_gray = image14_tr_gray.resize((25, 25), Image.ANTIALIAS)
+    image14_tr_gray = ImageTk.PhotoImage(image14_tr_gray)
     right_button4_tr = Button(mainframe4, image=image14_tr, border=0, command=move_for2)
     right_button4_tr.config(bg="#3399ff")
     right_button4_tr.place(x=600, y=500) #CHANGE duhet 725
+    right_button4_tr.config(image=image14_tr_gray)
+    right_button4_tr.config(command=nothing)
 
     image24_tr = Image.open("arrow_r.png")
     image24_tr = image24_tr.resize((25, 25), Image.ANTIALIAS)
     image24_tr = image24_tr.transpose(Image.FLIP_LEFT_RIGHT)
     image24_tr = ImageTk.PhotoImage(image24_tr)
+    image24_tr_gray = Image.open("arrow_r_GRAY.png")
+    image24_tr_gray = image24_tr_gray.resize((25, 25), Image.ANTIALIAS)
+    image24_tr_gray = image24_tr_gray.transpose(Image.FLIP_LEFT_RIGHT)
+    image24_tr_gray = ImageTk.PhotoImage(image24_tr_gray)
     left_button4_tr = Button(mainframe4, image=image24_tr, border=0, command=move_back2)
     left_button4_tr.config(bg="#3399ff")
     left_button4_tr.place(x=560, y=500) #CHANGE duhet 725
-    left_button4_tr.config(state='disable')
+    left_button4_tr.config(image=image24_tr_gray)
+    left_button4_tr.config(command=nothing)
 
     if pages_nr2 == 0:
         lblx2 = Label(mainframe4, bg='#3399ff', text="Page {} of {}".format(0, pages_nr2), font=('arial', 11), bd=2)
@@ -1537,7 +1590,11 @@ if __name__ == '__main__':
     left_button4.config(bg="#3399ff")
     left_button4.place(x=560, y=570) #CHANGE duhet 725
 
-    right_button4.config(state='disable')
+    image_right_gray = Image.open("right_GRAY.png")
+    image_right_gray = image_right_gray.resize((25, 25), Image.ANTIALIAS)
+    image_right_gray = ImageTk.PhotoImage(image_right_gray)
+
+    right_button4.config(image=image_right_gray)
     canvas = Canvas(mainframe4, width=100, height=10, bg="#3399ff", highlightthickness=0)
     canvas.create_rectangle(0, 0, 10, 10, outline="#3399ff", fill="black")
     canvas.create_rectangle(12, 0, 22, 10, outline="#3399ff", fill="black")
