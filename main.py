@@ -20,9 +20,10 @@ import tkinter.ttk as ttk
 import math
 from tkcalendar import DateEntry
 from multiprocessing.pool import ThreadPool, threading
+import webbrowser
 
 
-password = "12345"
+password = "FCAlex123"
 
 def switch12():
 
@@ -192,8 +193,8 @@ def scraper():
     def main(i):
         options = webdriver.ChromeOptions()
         options.add_argument("--start-maximized")
-        options.add_argument("--headless")
-        driver = webdriver.Chrome(options=options)
+        # options.add_argument("--headless")
+        driver = webdriver.Chrome("Files\chromedriver.exe", options=options)
         driver.get("https://www.google.com/")
         driver.get("https://www.google.com/search?q="+(i['provider']+" "+i['code']).replace(" ","+")+"&oq=Aberdeen+Standard+Investments+LU0779217297&sourceid=chrome&ie=UTF-8")
         c_link = driver.current_url
@@ -226,6 +227,7 @@ def scraper():
                     if PDF.get() == 1:
                         document = "pdf"
                     elif PDF.get() == 0:
+                        link = ""
                         continue
                 working = "1"
                 link_m = link
@@ -269,6 +271,11 @@ def scraper():
     run.config(bg="LightBlue1")
     run.config(text='Run Scraper')
 
+
+    tkMessageBox.showinfo("Completed!", "The scraper ran successfully!")
+
+
+
 def start():
     thread = Thread(target=scraper)
     thread.start()
@@ -276,12 +283,23 @@ def start():
 def nothing():
     return
 
+def test_driver():
+    try:
+        options = webdriver.ChromeOptions()
+        options.add_argument("--start-maximized")
+        options.add_argument("--headless")
+        driver = webdriver.Chrome("Files\chromedriver.exe", options=options)
+        driver.quit()
+    except Exception as e:
+        print(str(e))
+        version = str(e).split("Current browser version is ")[1].split(".")[0]
+        webbrowser.open(f"https://chromedriver.chromium.org/downloads")
+        tkMessageBox.showerror("Invalid chromedriver", f"Please download the right chromedriver version ({version}.) from the browser!")
 
 if __name__ == '__main__':
-
     input_data = []
     scraped_data = []
-    whitelist = "whitelist.csv"
+    whitelist = "Files\whitelist.csv"
 
     root = Tk()
     root.title("Fund Document Scraper \\ Menu")
@@ -337,7 +355,7 @@ if __name__ == '__main__':
     def on_leave1(enter):
         info1.lower(mainframe1)
 
-    image_info = Image.open("info.png")
+    image_info = Image.open(r"Images\info.png")
     image_info = image_info.resize((15, 15), Image.ANTIALIAS)
     image_info = ImageTk.PhotoImage(image_info)
     btn_info1 = Label(mainframe1, image=image_info, border=0)
@@ -447,21 +465,21 @@ if __name__ == '__main__':
 
 
 
-    image11 = Image.open("right.png")
+    image11 = Image.open(r"Images\right.png")
     image11 = image11.resize((25, 25), Image.ANTIALIAS)
     photo11 = ImageTk.PhotoImage(image11)
     right_button1 = Button(mainframe1, image=photo11, border=0, command=switch12)
     right_button1.config(bg="#3399ff")
     right_button1.place(x=570, y=570) #CHANGE duhet 725
 
-    image21 = Image.open("left.png")
+    image21 = Image.open(r"Images\left.png")
     image21 = image21.resize((25, 25), Image.ANTIALIAS)
     photo21 = ImageTk.PhotoImage(image21)
     left_button1 = Button(mainframe1, image=photo21, border=0)
     left_button1.config(bg="#3399ff")
     left_button1.place(x=530, y=570) #CHANGE duhet 725
 
-    image_left_gray = Image.open("left_GRAY.png")
+    image_left_gray = Image.open(r"Images\left_GRAY.png")
     image_left_gray = image_left_gray.resize((25, 25), Image.ANTIALIAS)
     image_left_gray = ImageTk.PhotoImage(image_left_gray)
     left_button1.config(image=image_left_gray)
@@ -591,9 +609,9 @@ if __name__ == '__main__':
             # create checheckbox images
 
             # image12 = Image.open("right.png")
-            self._im_checked = PhotoImage('checked',file="tick.png",
+            self._im_checked = PhotoImage('checked',file=r"Images\tick.png",
                                              master=self)
-            self._im_unchecked = PhotoImage('unchecked',file="untick.png",
+            self._im_unchecked = PhotoImage('unchecked',file=r"Images\untick.png",
                                                master=self)
             style = ttk.Style(self)
             style.configure("cb.Treeview.Heading", font=(None, 13))
@@ -754,21 +772,21 @@ if __name__ == '__main__':
         else:
             lblx.config(text = "Page {} of {}".format(c_page, pages_nr))
 
-    image12_tr = Image.open("arrow_r.png")
+    image12_tr = Image.open(r"Images\arrow_r.png")
     image12_tr = image12_tr.resize((25, 25), Image.ANTIALIAS)
     image12_tr = ImageTk.PhotoImage(image12_tr)
-    image12_tr_gray = Image.open("arrow_r_GRAY.png")
+    image12_tr_gray = Image.open(r"Images\arrow_r_GRAY.png")
     image12_tr_gray = image12_tr_gray.resize((25, 25), Image.ANTIALIAS)
     image12_tr_gray = ImageTk.PhotoImage(image12_tr_gray)
     right_button2_tr = Button(mainframe2, image=image12_tr, border=0, command=move_for1)
     right_button2_tr.config(bg="#3399ff")
     right_button2_tr.place(x=570, y=500) #CHANGE duhet 725
 
-    image22_tr = Image.open("arrow_r.png")
+    image22_tr = Image.open(r"Images\arrow_r.png")
     image22_tr = image22_tr.resize((25, 25), Image.ANTIALIAS)
     image22_tr = image22_tr.transpose(Image.FLIP_LEFT_RIGHT)
     image22_tr = ImageTk.PhotoImage(image22_tr)
-    image22_tr_gray = Image.open("arrow_r_GRAY.png")
+    image22_tr_gray = Image.open(r"Images\arrow_r_GRAY.png")
     image22_tr_gray = image22_tr_gray.resize((25, 25), Image.ANTIALIAS)
     image22_tr_gray = image22_tr_gray.transpose(Image.FLIP_LEFT_RIGHT)
     image22_tr_gray = ImageTk.PhotoImage(image22_tr_gray)
@@ -798,7 +816,7 @@ if __name__ == '__main__':
             else:
                 tkMessageBox.showerror("Invalid data", "Please select a CSV or TXT file!")
         else:
-            whitelist = "whitelist.csv"
+            whitelist = "Files\whitelist.csv"
         save1()
 
     upload_btn2 = Button(mainframe2, text='Upload Whitelist', width=20, command=UploadAction2)
@@ -834,7 +852,7 @@ if __name__ == '__main__':
 
 
     def save1():
-        file = open("whitelist.csv", 'w')
+        file = open("Files\whitelist.csv", 'w')
         file.write(",".join(['#Fund Provider', 'Website Link', 'Checkmark'])+"\n")
         for child in tree1.get_children():
             lista = tree1.item(child)["values"][:3]
@@ -850,14 +868,14 @@ if __name__ == '__main__':
 
 
 
-    image12 = Image.open("right.png")
+    image12 = Image.open(r"Images\right.png")
     image12 = image12.resize((25, 25), Image.ANTIALIAS)
     photo12 = ImageTk.PhotoImage(image12)
     right_button2 = Button(mainframe2, image=photo12, border=0, command=switch23)
     right_button2.config(bg="#3399ff")
     right_button2.place(x=570, y=570) #CHANGE duhet 725
 
-    image22 = Image.open("left.png")
+    image22 = Image.open(r"Images\left.png")
     image22 = image22.resize((25, 25), Image.ANTIALIAS)
     photo22 = ImageTk.PhotoImage(image22)
     left_button2 = Button(mainframe2, image=photo22, border=0, command=switch21)
@@ -927,7 +945,7 @@ if __name__ == '__main__':
             return
 
         if f.name[-4:] == ".csv":
-            original = './whitelist.csv'
+            original = '.Files\whitelist.csv'
             target = f.name
 
             shutil.copyfile(original, target)
@@ -1089,14 +1107,14 @@ if __name__ == '__main__':
     lbl.place(x=450, y=510)
 
 
-    image13 = Image.open("right.png")
+    image13 = Image.open(r"Images\right.png")
     image13 = image13.resize((25, 25), Image.ANTIALIAS)
     photo13 = ImageTk.PhotoImage(image13)
     right_button3 = Button(mainframe3, image=photo13, border=0, command=switch34)
     right_button3.config(bg="#3399ff")
     right_button3.place(x=570, y=570) #CHANGE duhet 725
 
-    image23 = Image.open("left.png")
+    image23 = Image.open(r"Images\left.png")
     image23 = image23.resize((25, 25), Image.ANTIALIAS)
     photo23 = ImageTk.PhotoImage(image23)
     left_button3 = Button(mainframe3, image=photo23, border=0, command=switch32)
@@ -1240,9 +1258,9 @@ if __name__ == '__main__':
             kw.setdefault('show', 'headings')  # hide column #0
             ttk.Treeview.__init__(self, master, **kw)
             # create checheckbox images
-            self._im_checked = PhotoImage('checked',file="tick.png",
+            self._im_checked = PhotoImage('checked',file=r"Images\tick.png",
                                              master=self)
-            self._im_unchecked = PhotoImage('unchecked',file="untick.png",
+            self._im_unchecked = PhotoImage('unchecked',file=r"Images\untick.png",
                                                master=self)
             style = ttk.Style(self)
             style.configure("cb.Treeview.Heading", font=(None, 13))
@@ -1400,10 +1418,10 @@ if __name__ == '__main__':
             locked = True
 
     locked = True
-    image_lock = Image.open("locked.png")
+    image_lock = Image.open(r"Images\locked.png")
     image_lock = image_lock.resize((25, 25), Image.ANTIALIAS)
     image_lock = ImageTk.PhotoImage(image_lock)
-    image_unlock = Image.open("unlocked.png")
+    image_unlock = Image.open(r"Images\unlocked.png")
     image_unlock = image_unlock.resize((25, 25), Image.ANTIALIAS)
     image_unlock = ImageTk.PhotoImage(image_unlock)
     btn_locked = Button(mainframe4, image=image_lock, border=0, command=un_lock)
@@ -1502,10 +1520,10 @@ if __name__ == '__main__':
             lblx2.config(text = "Page {} of {}".format(c_page2, pages_nr2))
 
 
-    image14_tr = Image.open("arrow_r.png")
+    image14_tr = Image.open(r"Images\arrow_r.png")
     image14_tr = image14_tr.resize((25, 25), Image.ANTIALIAS)
     image14_tr = ImageTk.PhotoImage(image14_tr)
-    image14_tr_gray = Image.open("arrow_r_GRAY.png")
+    image14_tr_gray = Image.open(r"Images\arrow_r_GRAY.png")
     image14_tr_gray = image14_tr_gray.resize((25, 25), Image.ANTIALIAS)
     image14_tr_gray = ImageTk.PhotoImage(image14_tr_gray)
     right_button4_tr = Button(mainframe4, image=image14_tr, border=0, command=move_for2)
@@ -1514,11 +1532,11 @@ if __name__ == '__main__':
     right_button4_tr.config(image=image14_tr_gray)
     right_button4_tr.config(command=nothing)
 
-    image24_tr = Image.open("arrow_r.png")
+    image24_tr = Image.open(r"Images\arrow_r.png")
     image24_tr = image24_tr.resize((25, 25), Image.ANTIALIAS)
     image24_tr = image24_tr.transpose(Image.FLIP_LEFT_RIGHT)
     image24_tr = ImageTk.PhotoImage(image24_tr)
-    image24_tr_gray = Image.open("arrow_r_GRAY.png")
+    image24_tr_gray = Image.open(r"Images\arrow_r_GRAY.png")
     image24_tr_gray = image24_tr_gray.resize((25, 25), Image.ANTIALIAS)
     image24_tr_gray = image24_tr_gray.transpose(Image.FLIP_LEFT_RIGHT)
     image24_tr_gray = ImageTk.PhotoImage(image24_tr_gray)
@@ -1537,10 +1555,21 @@ if __name__ == '__main__':
     def save2():
         f = open('Output.csv', 'w', newline='', encoding='UTF-8')
         writer = csv.writer(f)
-        writer.writerow(['Fund Provider', 'Fund Name', 'ISIN', 'Cusip', 'Document Type', 'Link', 'Working', 'Document kind'])
+        writer.writerow(['provider.provider_name', 'fund.fund_code', 'fund.cusip', 'fund.isin', 'doc_pool_audit.document_name', 'doc_pool_audit.document_url', 'dpa.document_description', 'fund.fund_name', 'doc_pool_webscraper.document_url', 'matching'])
 
         for child in tree2.get_children():
-            lista = tree2.item(child)["values"][:8]
+            print(tree2.item(child)["values"])
+            lista = tree2.item(child)["values"]
+            if lista[2] != "":
+                myorder = [0, 2, 3, 2, 7, 8, 0, 1, 5, 9]
+            if lista[3] != "":
+                myorder = [0, 3, 3, 2, 7, 8, 0, 1, 5, 9]
+            lista = [lista[i] for i in myorder]
+            lista[6] = lista[4][3:]
+            if lista[9] == "YES":
+                lista[9] = 1
+            else:
+                lista[9] = 0
             for nr,i in enumerate(lista):
                 lista[nr] = str(i)
             if tree2.item(child)["values"][9] == 0 or lista[5] == "":
@@ -1555,7 +1584,7 @@ if __name__ == '__main__':
 
 
     def export():
-
+        save2()
         f = filedialog.asksaveasfile(title='Name a file', initialdir='C:\\', filetypes=(("Comma Delimited", "*.csv*"),),
                                      defaultextension='.csv')
         if f is None:
@@ -1576,21 +1605,21 @@ if __name__ == '__main__':
 
 
 
-    image14 = Image.open("right.png")
+    image14 = Image.open(r"Images\right.png")
     image14 = image14.resize((25, 25), Image.ANTIALIAS)
     photo14 = ImageTk.PhotoImage(image14)
     right_button4 = Button(mainframe4, image=photo14, border=0)
     right_button4.config(bg="#3399ff")
     right_button4.place(x=600, y=570) #CHANGE duhet 725
 
-    image24 = Image.open("left.png")
+    image24 = Image.open(r"Images\left.png")
     image24 = image24.resize((25, 25), Image.ANTIALIAS)
     photo24 = ImageTk.PhotoImage(image24)
     left_button4 = Button(mainframe4, image=photo24, border=0, command=switch43)
     left_button4.config(bg="#3399ff")
     left_button4.place(x=560, y=570) #CHANGE duhet 725
 
-    image_right_gray = Image.open("right_GRAY.png")
+    image_right_gray = Image.open(r"Images\right_GRAY.png")
     image_right_gray = image_right_gray.resize((25, 25), Image.ANTIALIAS)
     image_right_gray = ImageTk.PhotoImage(image_right_gray)
 
@@ -1601,5 +1630,8 @@ if __name__ == '__main__':
     canvas.create_rectangle(24, 0, 34, 10, outline="#3399ff", fill="black")
     canvas.create_rectangle(36, 0, 46, 10, outline="#3399ff", fill="gray55")
     canvas.place(x=570, y=550)
-
+    try:
+        test_driver()
+    except:
+        pass
     root.mainloop()
