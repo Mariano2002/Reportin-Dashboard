@@ -24,6 +24,36 @@ import webbrowser
 import base64
 from PIL import Image
 from io import BytesIO
+import multiprocessing
+import win32gui, win32con
+
+threadLocal = threading.local()
+
+
+def get_driver():
+    driver = getattr(threadLocal, 'driver', None)
+    if driver is None:
+
+
+        options = webdriver.ChromeOptions()
+        options.add_argument("--start-maximized") #Maximize it
+        options.add_argument("--headless") #Makes it headless
+        driver = webdriver.Chrome("Files\chromedriver.exe", options=options)
+        setattr(threadLocal, 'driver', driver)
+
+    toplist = []
+    winlist = []
+
+    def enum_callback(hwnd, results):
+        winlist.append((hwnd, win32gui.GetWindowText(hwnd)))
+
+    win32gui.EnumWindows(enum_callback, toplist)
+    chrome = [(hwnd, title) for hwnd, title in winlist if 'chrome' in title.lower()]
+    chrome = chrome[0]
+    win32gui.ShowWindow(chrome[0], win32con.SW_MINIMIZE)
+    return driver
+
+
 
 password = "FCAlex123"
 
@@ -51,6 +81,8 @@ def switch32():
 def switch34():
     mainframe3.pack_forget()
     mainframe4.pack(anchor=N, fill=BOTH, expand=True, side=TOP,  padx=(10,10), pady=(0,0))
+    if len(tree2.get_children()) == 0:
+        tkMessageBox.showwarning("Don't forget to compare!", "To see the data on this window please don't forget to select a comparison file and press Compare.")
 
 def switch43():
     mainframe4.pack_forget()
@@ -207,10 +239,8 @@ def scraper():
 
     def main(i):
         #Open the driver
-        options = webdriver.ChromeOptions()
-        options.add_argument("--start-maximized") #Maximize it
-        options.add_argument("--headless") #Makes it headless
-        driver = webdriver.Chrome("Files\chromedriver.exe", options=options)
+
+        driver = get_driver()
         driver.get("https://www.google.com/")
         driver.get("https://www.google.com/search?q="+(i['provider']+" "+i['code']).replace(" ","+")+"&oq=Aberdeen+Standard+Investments+LU0779217297&sourceid=chrome&ie=UTF-8") #Go to list that searched the provider and the code
         c_link = driver.current_url
@@ -265,11 +295,14 @@ def scraper():
         elif i['type'] == 'cusip':
             scraped_data.append({"provider":i['provider'], "name":i['name'], "code":i['code'], "type":"cusip", "document":document, "link":link_m, "working":working, "old_link":"", 'same':"", 'checked':"1"})
         time.sleep(2)
-        driver.quit() #Close the webdriver
+        # driver.quit() #Close the webdriver
 
     if int(INSTANCES.get()) > 15: #If user selects more than 15 instances it will show the warning
         tkMessageBox.showwarning("Warning!", "To use that many instances you need to have a powerful computer and a fast internet connection!")
     ThreadPool(int(INSTANCES.get())).map(main,input_data) #This creates as many threads as the user choose and split the job equally on each of them
+
+
+
     input_data = []
     #Enables back all the buttons and the fields now that the scraping process is done
     csvf1.config(state='normal')
@@ -423,13 +456,17 @@ def live_edit(event):
     entryedit.place(x=x_long, y=75+index_number*30, width=n_width, height=30)
     entryedit.focus()
 
-    def saveedit(event):
+    def saveedit1(event):
+        root.unbind("<Button-1>")
         value = entryedit.get("1.0",END).replace("\n","")
         entryedit.destroy()
         tree1.set(item, column=column, value=value)
 
-    entryedit.bind("<FocusOut>", saveedit)
-    entryedit.bind("<Return>", saveedit)
+    entryedit.bind("<FocusOut>", saveedit1)
+    entryedit.bind("<Return>", saveedit1)
+    root.bind("<Button-1>", saveedit1)
+    root.bind("<Button-2>", saveedit1)
+    root.bind("<Button-3>", saveedit1)
 
 def fixed_map(option):
     return [elm for elm in style.map("Treeview", query_opt=option)
@@ -830,13 +867,20 @@ def live_edit2(event):
     entryedit2.place(x=x_long, y=75+index_number*30, width=n_width, height=30)
     entryedit2.focus()
 
-    def saveedit(event):
+    def saveedit2(event):
+        root.unbind("<Button-1>")
         value = entryedit2.get("1.0",END).replace("\n","")
         entryedit2.destroy()
         tree2.set(item, column=column, value=value)
 
-    entryedit2.bind("<FocusOut>", saveedit)
-    entryedit2.bind("<Return>", saveedit)
+    entryedit2.bind("<FocusOut>", saveedit2)
+    entryedit2.bind("<Return>", saveedit2)
+    root.bind("<Button-1>", saveedit2)
+    root.bind("<Button-2>", saveedit2)
+    root.bind("<Button-3>", saveedit2)
+
+
+
 
 class CbTreeview2(ttk.Treeview):
     def __init__(self, master=None, **kw):
