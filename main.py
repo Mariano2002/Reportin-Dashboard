@@ -25,7 +25,7 @@ import base64
 from PIL import Image
 from io import BytesIO
 import multiprocessing
-import win32gui, win32con
+import win32gui, win32con   #try installing pywin32==300 or pywin in general after that this should package and work just fine.
 
 threadLocal = threading.local()
 
